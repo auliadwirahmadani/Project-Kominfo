@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\GeospatialLayer; // ✅ Ditambahkan untuk memanggil data peta
+use App\Models\Category; // ✅ Ditambahkan untuk menghitung total kategori
 use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
@@ -15,7 +16,26 @@ class AdminController extends Controller
     // ===============================
     public function dashboard()
     {
-        return view('layouts.admin.dashboard');
+        // 1. Menghitung Statistik
+        $totalUsers = User::count();
+        $totalLayers = GeospatialLayer::count();
+        $totalPublished = GeospatialLayer::where('is_published', 1)->count();
+        $totalCategories = Category::count();
+
+        // 2. Mengambil 5 Data Geospasial terbaru untuk dijadikan "Aktivitas Terbaru"
+        $recentActivities = GeospatialLayer::with('category')
+                            ->latest()
+                            ->take(5)
+                            ->get();
+
+        // 3. Kirim data ke view
+        return view('layouts.admin.dashboard', compact(
+            'totalUsers', 
+            'totalLayers', 
+            'totalPublished', 
+            'totalCategories',
+            'recentActivities'
+        ));
     }
 
     // ===============================

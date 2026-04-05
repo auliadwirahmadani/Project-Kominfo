@@ -10,10 +10,12 @@ class Category extends Model
     use HasFactory;
 
     protected $table = 'categories';
-    protected $primaryKey = 'category_id';
+    
+    // Ini yang menyelamatkan dari error "categories.id does not exist"
+    protected $primaryKey = 'category_id'; 
     
     protected $fillable = [
-        'category_name',
+        'category_name', // Pastikan di database DBeaver nama kolomnya benar-benar 'category_name' (bukan 'name')
         'description',
     ];
 

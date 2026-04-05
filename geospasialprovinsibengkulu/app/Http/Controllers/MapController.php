@@ -52,7 +52,8 @@ class MapController extends Controller
                 'name' => $layer->layer_name,
                 'description' => $layer->description,
                 'category_id' => $layer->category_id,
-                'url' => asset('storage/geospatial/' . $layer->file_path),
+                // ✅ DIPERBAIKI: Hapus tambahan folder 'geospatial/' yang bikin error 404
+                'url' => asset('storage/' . $layer->file_path),
             ];
         });
 
@@ -86,7 +87,8 @@ class MapController extends Controller
                 'name' => $layer->layer_name,
                 'description' => $layer->description,
                 'category_id' => $layer->category_id,
-                'url' => asset('storage/geospatial/' . $layer->file_path),
+                // ✅ DIPERBAIKI: Hapus tambahan folder 'geospatial/'
+                'url' => asset('storage/' . $layer->file_path),
             ];
         });
 

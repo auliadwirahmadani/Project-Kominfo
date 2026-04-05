@@ -60,6 +60,49 @@ main, .py-4 {
 .leaflet-bottom.leaflet-left { left: 20px; bottom: 20px; }
 .leaflet-bottom.leaflet-right { right: 20px; bottom: 20px; }
 .info-control { background: rgba(31, 41, 55, 0.9); color: white; padding: 12px 16px; border-radius: 10px; font-size: 13px; }
+
+/* =========================
+   STYLING CUSTOM POPUP MERAH PUTIH
+========================= */
+.red-white-popup .leaflet-popup-content-wrapper {
+    padding: 0;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    border: 2px solid #dc2626; /* Merah Tailwind */
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+.red-white-popup .leaflet-popup-content {
+    margin: 0;
+    width: auto !important;
+}
+.red-white-popup .leaflet-popup-tip {
+    background: #dc2626; /* Segitiga bawah warna merah */
+}
+.red-white-popup a.leaflet-popup-close-button {
+    color: white !important; /* Tombol X warna putih */
+    top: 10px !important;
+    right: 10px !important;
+    font-size: 16px !important;
+    font-weight: bold;
+    z-index: 10;
+}
+.red-white-popup a.leaflet-popup-close-button:hover {
+    color: #fca5a5 !important;
+}
+/* Kustomisasi Scrollbar untuk tabel metadata */
+.custom-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: #fca5a5; 
+    border-radius: 4px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: #ef4444; 
+}
 </style>
 
 <div id="map"></div>
@@ -84,13 +127,34 @@ window.loadMapData = function(layersData) {
     if (!layersData || layersData.length === 0) return;
 
     layersData.forEach(function(item) {
-        if (!item.file_path) return;
+        if (!item.file_path && !item.url) return;
 
-        var fileUrl = item.url ? item.url : "{{ asset('storage') }}/" + item.file_path;
+        // ====================================================
+        // 🚀 SUPER ROBOT AUTO-FIX UNTUK URL PETA
+        // ====================================================
+        var fileUrl;
+        
+        // 1. Jika data dikirim dari Filter/Search (sudah punya properti 'url' matang)
+        if (item.url) {
+            fileUrl = item.url;
+        } 
+        // 2. Jika data dikirim dari Loading Awal ($layers mentah)
+        else {
+            // Kita harus menghapus kata 'public/' jika secara tidak sengaja tersimpan di database
+            var cleanPath = item.file_path.replace('public/', '');
+            
+            // Cek apakah di database sudah ada awalan 'storage/' atau belum
+            if (cleanPath.startsWith('storage/')) {
+                fileUrl = "/" + cleanPath;
+            } else {
+                fileUrl = "/storage/" + cleanPath;
+            }
+        }
+        // ====================================================
 
         fetch(fileUrl)
             .then(res => {
-                if (!res.ok) throw new Error("File GeoJSON tidak ditemukan (Error 404)");
+                if (!res.ok) throw new Error("File GeoJSON tidak ditemukan di alamat: " + fileUrl);
                 return res.json();
             })
             .then(data => {
@@ -146,9 +210,56 @@ window.loadMapData = function(layersData) {
                     style: styleDefault,
                     onEachFeature: function(feature, layer) {
                         var props = feature.properties || {};
-                        var name = props.NAMOBJ || props.Name || props.name || item.layer_name || "Wilayah Terpilih";
+                        var name = props.NAMOBJ || props.Name || props.name || props.KABUPATEN || props.KECAMATAN || item.layer_name || "Wilayah Terpilih";
 
-                        layer.bindPopup("<b>" + name + "</b>");
+                        // ====================================================
+                        // 🚀 PEMBUATAN KONTEN POPUP METADATA MERAH PUTIH
+                        // ====================================================
+                        let tableRows = '';
+                        // Looping seluruh atribut/properti dari file GeoJSON
+                        for (const [key, value] of Object.entries(props)) {
+                            // Hanya tampilkan yang ada isinya (bukan null/kosong)
+                            if (value !== null && value !== undefined && value !== '') {
+                                tableRows += `
+                                    <tr class="border-b border-gray-100 hover:bg-red-50 transition-colors">
+                                        <td class="py-2 pr-4 text-xs font-bold text-red-700 uppercase tracking-wider w-1/3 align-top">${key}</td>
+                                        <td class="py-2 text-sm text-gray-700 font-medium break-words">${value}</td>
+                                    </tr>
+                                `;
+                            }
+                        }
+
+                        let popupHTML = `
+                            <div class="w-full min-w-[280px] max-w-[350px]">
+                                <!-- Header Merah -->
+                                <div class="bg-red-600 text-white p-4 pb-3 rounded-t-lg relative">
+                                    <h3 class="font-bold text-base pr-4 leading-tight"><i class="fas fa-map-marker-alt mr-2"></i>${name}</h3>
+                                    <p class="text-red-100 text-xs mt-1">Sumber: ${item.layer_name}</p>
+                                </div>
+                                
+                                <!-- Body Putih (Tabel Metadata) -->
+                                <div class="bg-white p-4 max-h-[250px] overflow-y-auto custom-scroll">
+                                    ${tableRows ? `
+                                        <table class="w-full text-left border-collapse">
+                                            <tbody>${tableRows}</tbody>
+                                        </table>
+                                    ` : `
+                                        <div class="text-center py-4 text-gray-400">
+                                            <i class="fas fa-database text-2xl mb-2"></i>
+                                            <p class="text-sm italic">Tidak ada atribut data spasial</p>
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+
+                        // Bind popup dengan custom CSS Class
+                        layer.bindPopup(popupHTML, {
+                            className: 'red-white-popup',
+                            minWidth: 280,
+                            maxWidth: 350,
+                            closeButton: true
+                        });
 
                         layer.on('mouseover', function(e) {
                             if (e.target.setStyle) e.target.setStyle(styleHover());
@@ -174,6 +285,7 @@ window.loadMapData = function(layersData) {
             })
             .catch(error => {
                 alert("⚠️ GAGAL MENGUNDUH PETA: \nTidak dapat membaca file untuk '" + item.layer_name + "'.\nDetail: " + error.message);
+                console.error("Path Error:", fileUrl);
             });
     });
 };

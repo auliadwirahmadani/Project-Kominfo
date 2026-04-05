@@ -41,7 +41,7 @@ class GeospatialController extends Controller
             'is_published' => 'nullable|boolean',
         ], [
             'geospatial_file.required' => 'File harus diupload',
-            'geospatial_file.max' => 'Ukuran file maksimal 100MB', // 🔥 Pesan error 100MB
+            'geospatial_file.max' => 'Ukuran file maksimal 100MB',
         ]);
 
         $file = $request->file('geospatial_file');
@@ -68,29 +68,20 @@ class GeospatialController extends Controller
                 throw new \Exception('Gagal menyimpan file ke storage');
             }
 
-            // Baca konten GeoJSON jika file berupa geojson/json untuk preview
-            $geojsonData = null;
-            if (in_array($extension, ['geojson', 'json'])) {
-                $content = file_get_contents($file->getRealPath());
-                $decoded = json_decode($content, true);
-                if (json_last_error() === JSON_ERROR_NONE && isset($decoded['type'])) {
-                    $geojsonData = json_encode($decoded);
-                }
-            }
-
             GeospatialLayer::create([
                 'layer_name' => $validated['layer_name'],
                 'category_id' => $validated['category_id'],
                 'description' => $validated['description'] ?? null,
                 'status_verifikasi' => $validated['status_verifikasi'] ?? 'pending',
                 'is_published' => $request->has('is_published'),
-                'id' => auth()->id() ?? 1,
+                // ID User pembuat (Pastikan ada user yang login, fallback ke 1)
+                'id' => auth()->check() ? auth()->id() : 1,
                 'file_path' => $filePath,
                 'file_original_name' => $originalName,
                 'file_type' => $extension,
                 'file_size' => $file->getSize(),
                 'file_mime' => $file->getMimeType(),
-                'geojson_data' => $geojsonData, 
+                // geojson_data dihapus agar tidak error SQL
             ]);
 
             DB::commit();
@@ -152,6 +143,7 @@ class GeospatialController extends Controller
             ];
 
             if($request->hasFile('geospatial_file')) {
+                // Hapus file lama jika ada
                 if($layer->file_path && Storage::disk('public')->exists($layer->file_path)) {
                     Storage::disk('public')->delete($layer->file_path);
                 }
@@ -168,17 +160,7 @@ class GeospatialController extends Controller
                 $data['file_type'] = $extension;
                 $data['file_size'] = $file->getSize();
                 $data['file_mime'] = $file->getMimeType();
-
-                // Update geojson_data jika file baru adalah GeoJSON
-                if (in_array($extension, ['geojson', 'json'])) {
-                    $content = file_get_contents($file->getRealPath());
-                    $decoded = json_decode($content, true);
-                    if (json_last_error() === JSON_ERROR_NONE && isset($decoded['type'])) {
-                        $data['geojson_data'] = json_encode($decoded);
-                    }
-                } else {
-                    $data['geojson_data'] = null; // Kosongkan jika zip
-                }
+                // geojson_data processing dihapus
             }
 
             $layer->update($data);
@@ -230,49 +212,45 @@ class GeospatialController extends Controller
     public function getGeoJson($id): JsonResponse
     {
         try {
-            $layer = GeospatialLayer::where('geospatial_id', $id)->orWhere('id', $id)->firstOrFail();
+            // Gunakan primary key yang benar
+            $layer = GeospatialLayer::where('geospatial_id', $id)->firstOrFail();
             
+            if (!$layer->file_path) {
+                return response()->json([
+                    'error' => 'Data peta tidak tersedia untuk layer ini.'
+                ], 404);
+            }
+
+            $fullPath = storage_path('app/public/' . $layer->file_path);
+            
+            if (!file_exists($fullPath)) {
+                return response()->json([
+                    'error' => 'File fisik tidak ditemukan di server.',
+                    'path' => $layer->file_path
+                ], 404);
+            }
+
             // ✅ Deteksi ZIP Shapefile
-            if ($layer->file_path && str_ends_with(strtolower($layer->file_path), '.zip')) {
+            if (str_ends_with(strtolower($layer->file_path), '.zip')) {
                 return response()->json([
                     'is_shapefile' => true,
-                    // Panggil fungsi serveFile agar tidak terhalang Storage
-                    'url' => url('/serve-peta/' . ($layer->geospatial_id ?? $layer->id))
+                    // Kita gunakan asset() yang lebih standar
+                    'url' => asset('storage/' . $layer->file_path)
                 ]);
             }
             
-            // Prioritas 1: Jika geojson_data sudah tersimpan di database
-            if ($layer->geojson_data) {
-                return response()->json(json_decode($layer->geojson_data));
+            // ✅ Baca isi file json dari hardisk
+            $content = file_get_contents($fullPath);
+            $data = json_decode($content, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return response()->json([
+                    'error' => 'File rusak atau bukan format JSON yang valid.',
+                    'details' => json_last_error_msg()
+                ], 422);
             }
             
-            // Prioritas 2: Baca langsung dari file storage
-            if ($layer->file_path) {
-                $fullPath = storage_path('app/public/' . $layer->file_path);
-                
-                if (!file_exists($fullPath)) {
-                    return response()->json([
-                        'error' => 'File fisik tidak ditemukan di server.',
-                        'path' => $layer->file_path
-                    ], 404);
-                }
-                
-                $content = file_get_contents($fullPath);
-                $data = json_decode($content, true);
-                
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    return response()->json([
-                        'error' => 'File rusak atau bukan format JSON yang valid.',
-                        'details' => json_last_error_msg()
-                    ], 422);
-                }
-                
-                return response()->json($data);
-            }
-            
-            return response()->json([
-                'error' => 'Data peta tidak tersedia untuk layer ini.'
-            ], 404);
+            return response()->json($data);
             
         } catch (\Exception $e) {
             \Log::error('GeoJSON fetch error: ' . $e->getMessage());
@@ -288,7 +266,7 @@ class GeospatialController extends Controller
     // ========================================================
     public function download($id): StreamedResponse
     {
-        $layer = GeospatialLayer::where('geospatial_id', $id)->orWhere('id', $id)->firstOrFail();
+        $layer = GeospatialLayer::where('geospatial_id', $id)->firstOrFail();
         
         if (!$layer->file_path) {
             abort(404, 'Path file tidak tersedia di Database.');
@@ -341,18 +319,17 @@ class GeospatialController extends Controller
     }
 
     // ========================================================
-    // ✅ METHOD BARU: SERVE FILE PETA LANGSUNG (ANTI GAGAL/BYPASS SYMLINK)
+    // SERVE FILE PETA LANGSUNG (ANTI GAGAL/BYPASS SYMLINK)
     // ========================================================
     public function serveFile($id)
     {
-        $layer = GeospatialLayer::where('geospatial_id', $id)->orWhere('id', $id)->firstOrFail();
+        $layer = GeospatialLayer::where('geospatial_id', $id)->firstOrFail();
         $path = storage_path('app/public/' . $layer->file_path);
 
         if (!file_exists($path)) {
             abort(404, 'File fisik peta tidak ditemukan di server.');
         }
 
-        // Paksa kirim file langsung ke browser tanpa peduli symlink
         return response()->file($path);
     }
 }

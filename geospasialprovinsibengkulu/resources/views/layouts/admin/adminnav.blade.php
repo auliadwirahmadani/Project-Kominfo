@@ -162,7 +162,7 @@
                    class="menu-item flex items-center gap-3 px-4 py-3 rounded-lg
                    {{ Request::routeIs('admin.masterreferensi*') ? 'menu-active bg-white/10 text-white' : 'hover:bg-white/10 text-red-200' }}">
                     <i class="fas fa-book w-5"></i>
-                    <span class="font-medium">Master Referensi</span>
+                    <span class="font-medium">Data Metadata</span>
                 </a>
 
                 <!-- ✅ DATA GEOSPASIAL - PERBAIKI ROUTE & ACTIVE STATE -->
