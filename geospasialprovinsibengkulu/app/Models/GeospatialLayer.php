@@ -10,22 +10,20 @@ class GeospatialLayer extends Model
     use HasFactory;
 
     protected $table = 'geospatial_layer';
+    
+    // Memberitahu Laravel bahwa Primary Key-nya adalah geospatial_id
     protected $primaryKey = 'geospatial_id';
     
+    // Disesuaikan persis dengan kolom yang ada di database DBeaver
     protected $fillable = [
-        'category_id',
         'layer_name',
         'description',
-        'geometry',
-        'is_published',
-        'status_verifikasi',
-        'id',
+        'category_id',
         'file_path',
-        'file_original_name',
-        'file_type',
-        'file_size',
-        'file_mime',
-        'user_id',
+        'status_verifikasi',
+        'is_published',
+        // 'user_id', // Buka komentar (hapus //) jika kolom ini ternyata sudah mas tambahkan di database
+        // 'geometry', // Buka komentar jika kolom ini ada di database
     ];
 
     protected $casts = [
@@ -37,19 +35,19 @@ class GeospatialLayer extends Model
     // Relasi ke Category
     public function category()
     {
-        return $this->belongsTo(Category::class, 'category_id', 'category_id');
+        // Parameter ke-3 diubah kembali menjadi category_id
+        return $this->belongsTo(Category::class, 'category_id', 'category_id'); 
     }
-
-    // Relasi ke User
+    
+    // Relasi ke User (Hanya akan berfungsi jika ada kolom user_id di tabel geospatial_layer)
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    // ✅ TAMBAHKAN RELASI INI (sesuai struktur MetadataLayer Anda)
+    // Relasi ke MetadataLayer
     public function metadata()
     {
-        // hasOne karena satu layer punya satu metadata
         return $this->hasOne(MetadataLayer::class, 'geospatial_id', 'geospatial_id');
     }
 }
