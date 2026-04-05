@@ -12,10 +12,10 @@ class MapController extends Controller
      */
     public function index()
     {
-        // ✅ Ambil layer yang Approved DAN Published untuk tampilan awal
-        $layers = GeospatialLayer::where('status_verifikasi', 'approved')
+        // ✅ TAMBAHKAN with('metadata') agar data dari tabel metadata_layer ikut terbawa
+        $layers = GeospatialLayer::with('metadata')
+                    ->where('status_verifikasi', 'approved')
                     ->where('is_published', 1)
-                    ->select('geospatial_id', 'layer_name', 'description', 'category_id', 'file_path', 'created_at')
                     ->get();
 
         return view('geo', compact('layers'));
@@ -23,76 +23,73 @@ class MapController extends Controller
 
     /**
      * API Endpoint untuk mengambil data peta berdasarkan Filter
-     * (Kategori dan Tahun)
      */
     public function getFilteredLayers(Request $request)
     {
-        // 1. Mulai query dengan syarat wajib (Approved & Published)
-        $query = GeospatialLayer::where('status_verifikasi', 'approved')
-                    ->where('is_published', 1)
-                    ->select('geospatial_id', 'layer_name', 'description', 'category_id', 'file_path', 'created_at');
+        // 1. Mulai query dengan relasi metadata
+        $query = GeospatialLayer::with('metadata')
+                    ->where('status_verifikasi', 'approved')
+                    ->where('is_published', 1);
 
-        // 2. Filter berdasarkan Category ID (jika user memilih kategori)
+        // 2. Filter berdasarkan Category ID
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
 
-        // 3. Filter berdasarkan Tahun Pembuatan (jika user memilih tahun)
+        // 3. Filter berdasarkan Tahun
         if ($request->filled('year')) {
             $query->whereYear('created_at', $request->year);
         }
 
-        // 4. Eksekusi query
         $layers = $query->get();
 
-        // 5. Format ulang data agar menyertakan URL file yang bisa dibaca Leaflet
+        // 4. Format ulang data agar menyertakan objek metadata lengkap untuk Javascript
         $formattedLayers = $layers->map(function($layer) {
             return [
-                'id' => $layer->geospatial_id,
-                'name' => $layer->layer_name,
-                'description' => $layer->description,
-                'category_id' => $layer->category_id,
-                // ✅ DIPERBAIKI: Hapus tambahan folder 'geospatial/' yang bikin error 404
-                'url' => asset('storage/' . $layer->file_path),
+                'geospatial_id' => $layer->geospatial_id,
+                'layer_name'    => $layer->layer_name,
+                'description'   => $layer->description,
+                'file_path'     => $layer->file_path,
+                'url'           => asset('storage/' . $layer->file_path),
+                'created_at'    => $layer->created_at,
+                // ✅ Kirim data metadata ke JSON
+                'metadata'      => $layer->metadata 
             ];
         });
 
-        // Kembalikan data dalam format JSON
         return response()->json(['layers' => $formattedLayers]);
     }
 
     /**
-     * API Endpoint untuk mencari data peta berdasarkan Nama Layer (Search Bar)
+     * API Endpoint untuk mencari data peta (Search Bar)
      */
     public function searchLayers(Request $request)
     {
         $keyword = $request->input('q');
 
-        // Mulai query dengan syarat wajib (Approved & Published)
-        $query = GeospatialLayer::where('status_verifikasi', 'approved')
-                    ->where('is_published', 1)
-                    ->select('geospatial_id', 'layer_name', 'description', 'category_id', 'file_path', 'created_at');
+        $query = GeospatialLayer::with('metadata')
+                    ->where('status_verifikasi', 'approved')
+                    ->where('is_published', 1);
 
-        // Jika ada inputan di search bar, cari berdasarkan nama layernya
         if (!empty($keyword)) {
             $query->where('layer_name', 'LIKE', '%' . $keyword . '%');
         }
 
         $layers = $query->get();
 
-        // Format datanya agar menyertakan URL file yang bisa dibaca Leaflet
         $formattedLayers = $layers->map(function($layer) {
             return [
-                'id' => $layer->geospatial_id,
-                'name' => $layer->layer_name,
-                'description' => $layer->description,
-                'category_id' => $layer->category_id,
-                // ✅ DIPERBAIKI: Hapus tambahan folder 'geospatial/'
-                'url' => asset('storage/' . $layer->file_path),
+                'geospatial_id' => $layer->geospatial_id,
+                'layer_name'    => $layer->layer_name,
+                'description'   => $layer->description,
+                'file_path'     => $layer->file_path,
+                'url'           => asset('storage/' . $layer->file_path),
+                'created_at'    => $layer->created_at,
+                // ✅ Kirim data metadata ke JSON
+                'metadata'      => $layer->metadata 
             ];
         });
 
-        // Kembalikan data dalam format JSON
         return response()->json(['layers' => $formattedLayers]);
     }
 }
