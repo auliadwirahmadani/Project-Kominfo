@@ -16,8 +16,16 @@ use App\Http\Controllers\ProdusenController;
 */
 
 Route::get('/', [MapController::class, 'index'])->name('geo');
-Route::get('/catalog', fn() => view('catalog'))->name('catalog');
 Route::get('/about', fn() => view('about'))->name('about');
+
+// ✅ RUTE UNTUK KATALOG (Sudah Diupdate Menggunakan Controller)
+Route::get('/catalog', [GeospatialController::class, 'katalog'])->name('catalog');
+
+// ✅ RUTE UNTUK DATASET (Daftar Banyak Data)
+Route::get('/dataset', [GeospatialController::class, 'katalogDataset'])->name('dataset');
+
+// ✅ RUTE BARU UNTUK DETAIL DATASET (Satu Data Spesifik)
+Route::get('/dataset/{id}', [GeospatialController::class, 'showDetail'])->name('dataset.show');
 
 // ===============================
 // ROUTE UNTUK FILTER PETA
@@ -165,7 +173,7 @@ Route::prefix('verifikator')
         Route::get('/monitoring', [VerifikatorController::class, 'monitoring'])
             ->name('monitoring.index');
 
-    }); // ✅ TANDA KURUNG PENUTUP VERIFIKATOR YANG BENAR
+    }); 
 
 
 /*
@@ -203,4 +211,4 @@ Route::prefix('produsen')
         Route::get('/monitoring', [ProdusenController::class, 'monitoring'])
             ->name('monitoring.index');
 
-    }); // ✅ TANDA KURUNG PENUTUP PRODUSEN YANG BENAR
+    });

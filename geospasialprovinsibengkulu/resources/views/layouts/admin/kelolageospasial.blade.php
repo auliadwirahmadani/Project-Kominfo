@@ -78,14 +78,7 @@
                             <i class="fas fa-map"></i>
                         </button>
                         @endif
-                        
-                        {{-- ✅ TOMBOL BARU: Isi Metadata --}}
-                        <a href="{{ route('admin.metadata.index', ['layer_id' => $layer->geospatial_id]) }}" 
-                           class="text-purple-600 hover:text-purple-800 p-1" 
-                           title="Kelola Metadata">
-                            <i class="fas fa-file-alt"></i>
-                        </a>
-
+                
                         {{-- ✅ Tombol Edit --}}
                         <a href="{{ route('admin.geoedit', $layer->geospatial_id) }}" 
                            class="text-blue-600 hover:text-blue-800 p-1" 
@@ -635,4 +628,4 @@
         xhr.send(formData);
     });
 </script>
-@endpush
+@endpusha

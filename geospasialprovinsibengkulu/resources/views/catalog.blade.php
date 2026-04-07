@@ -396,6 +396,7 @@
         align-items: center;
         justify-content: center;
         gap: 0.375rem;
+        text-decoration: none;
     }
 
     .card-action-btn.primary {
@@ -480,6 +481,7 @@
         font-weight: 600;
         cursor: pointer;
         transition: var(--transition);
+        text-decoration: none;
     }
 
     .card-view-btn:hover {
@@ -784,207 +786,59 @@
         <div class="active-filters" id="activeFilters"></div>
     </div>
 
-    <!-- Cards Grid -->
+    <!-- Cards Grid Dinamis -->
     <div class="catalog-grid" id="catalogGrid">
         
-        <!-- Card 1 -->
-        <article class="catalog-card card-new" data-category="lingkungan" data-type="polygon">
+        @forelse($katalogData ?? [] as $data)
+        <!-- Sesuaikan data-category dan data-type dengan kolom di database Anda agar filter JS tetap berfungsi -->
+        <article class="catalog-card {{ $loop->first ? 'card-new' : '' }}" data-category="{{ strtolower($data->kategori ?? 'lainnya') }}" data-type="{{ strtolower($data->tipe_data ?? 'polygon') }}">
             <div class="card-image">
-                <img src="https://i.imgur.com/9Z5Zf7L.png" alt="Kawasan Ekosistem RIMBA" loading="lazy">
-                <span class="card-badge">KW</span>
-                <span class="card-meta">
-                    <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.566a1 1 0 01.745.334l3.898 3.898a1 1 0 001.414 0l3.898-3.898a1 1 0 01.745-.334H17a2 2 0 002-2V5a1 1 0 00-1-1H3zm8.5 2.5a.5.5 0 01.5.5v3.75a.5.5 0 01-1 0V6a.5.5 0 01.5-.5z" clip-rule="evenodd"/></svg>
-                    2 Layer
-                </span>
+                <!-- Gunakan gambar default jika tidak ada thumbnail di DB -->
+                <img src="{{ isset($data->thumbnail) ? asset('storage/' . $data->thumbnail) : 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $data->judul ?? 'Peta' }}" loading="lazy">
+                
+                <span class="card-badge">{{ strtoupper(substr($data->kategori ?? 'Peta', 0, 3)) }}</span>
+                
                 <div class="card-overlay">
                     <div class="card-actions">
-                        <button class="card-action-btn">
+                        <a href="{{ route('admin.geospasial.download', $data->id ?? 1) }}" class="card-action-btn">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                             Unduh
-                        </button>
-                        <button class="card-action-btn primary">
+                        </a>
+                        <a href="{{ route('dataset.show', $data->id ?? 1) }}" class="card-action-btn primary">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            Preview
-                        </button>
+                            Detail
+                        </a>
                     </div>
                 </div>
             </div>
             <div class="card-body">
-                <h3 class="card-title">Kawasan Ekosistem RIMBA</h3>
+                <h3 class="card-title">{{ $data->judul ?? 'Data Tanpa Judul' }}</h3>
                 <div class="card-author">
-                    <div class="card-author-avatar">KW</div>
-                    <span>Kusmana H Wirawan</span>
+                    <div class="card-author-avatar">{{ strtoupper(substr($data->instansi ?? 'D', 0, 1)) }}</div>
+                    <span>{{ $data->instansi ?? 'Pemerintah Provinsi' }}</span>
                 </div>
             </div>
             <div class="card-footer">
                 <div class="card-tags">
-                    <span class="card-tag">Lingkungan</span>
-                    <span class="card-tag">2024</span>
+                    <span class="card-tag">{{ $data->kategori ?? 'Umum' }}</span>
+                    <span class="card-tag">{{ isset($data->created_at) ? $data->created_at->format('Y') : date('Y') }}</span>
                 </div>
-                <button class="card-view-btn">View Map →</button>
+                <!-- Redirect ke halaman webGIS utama dengan mengaktifkan layer spesifik ini -->
+                <a href="{{ route('geo', ['layer' => $data->id ?? 1]) }}" class="card-view-btn">View Map →</a>
             </div>
         </article>
-
-        <!-- Card 2 -->
-        <article class="catalog-card" data-category="administrasi" data-type="polygon">
-            <div class="card-image">
-                <img src="https://i.imgur.com/8XJ4ZqG.png" alt="Batas Administrasi Bengkulu" loading="lazy">
-                <span class="card-badge">ADM</span>
-                <div class="card-overlay">
-                    <div class="card-actions">
-                        <button class="card-action-btn">Unduh</button>
-                        <button class="card-action-btn primary">Preview</button>
-                    </div>
-                </div>
+        @empty
+            <div class="empty-state" id="emptyState" style="display: block; grid-column: 1 / -1;">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h3>Belum ada data geospasial</h3>
+                <p>Data yang dipublikasikan akan otomatis muncul di sini.</p>
+                <button class="filter-btn reset" id="emptyResetBtn" style="margin-top: 1rem;">Reset Filter</button>
             </div>
-            <div class="card-body">
-                <h3 class="card-title">Batas Administrasi Provinsi</h3>
-                <div class="card-author">
-                    <div class="card-author-avatar">B</div>
-                    <span>Badan Pusat Statistik</span>
-                </div>
-            </div>
-            <div class="card-footer">
-                <div class="card-tags">
-                    <span class="card-tag">Administrasi</span>
-                    <span class="card-tag">2024</span>
-                </div>
-                <button class="card-view-btn">View Map →</button>
-            </div>
-        </article>
-
-        <!-- Card 3 -->
-        <article class="catalog-card" data-category="infrastruktur" data-type="polyline">
-            <div class="card-image">
-                <img src="https://i.imgur.com/1Jj2X7d.png" alt="Jaringan Jalan Bengkulu" loading="lazy">
-                <span class="card-badge">INF</span>
-                <span class="card-meta">
-                    <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.566a1 1 0 01.745.334l3.898 3.898a1 1 0 001.414 0l3.898-3.898a1 1 0 01.745-.334H17a2 2 0 002-2V5a1 1 0 00-1-1H3zm8.5 2.5a.5.5 0 01.5.5v3.75a.5.5 0 01-1 0V6a.5.5 0 01.5-.5z" clip-rule="evenodd"/></svg>
-                    3 Layer
-                </span>
-                <div class="card-overlay">
-                    <div class="card-actions">
-                        <button class="card-action-btn">Unduh</button>
-                        <button class="card-action-btn primary">Preview</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <h3 class="card-title">Jaringan Jalan Utama</h3>
-                <div class="card-author">
-                    <div class="card-author-avatar">D</div>
-                    <span>Dinas PUPR Bengkulu</span>
-                </div>
-            </div>
-            <div class="card-footer">
-                <div class="card-tags">
-                    <span class="card-tag">Infrastruktur</span>
-                    <span class="card-tag">2023</span>
-                </div>
-                <button class="card-view-btn">View Map →</button>
-            </div>
-        </article>
-
-        <!-- Card 4 -->
-        <article class="catalog-card" data-category="ekonomi" data-type="polygon">
-            <div class="card-image">
-                <img src="https://i.imgur.com/5YdRq4P.png" alt="Kawasan Industri" loading="lazy">
-                <span class="card-badge">ECO</span>
-                <div class="card-overlay">
-                    <div class="card-actions">
-                        <button class="card-action-btn">Unduh</button>
-                        <button class="card-action-btn primary">Preview</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <h3 class="card-title">Kawasan Industri & Ekonomi</h3>
-                <div class="card-author">
-                    <div class="card-author-avatar">D</div>
-                    <span>Dinas Perdagangan</span>
-                </div>
-            </div>
-            <div class="card-footer">
-                <div class="card-tags">
-                    <span class="card-tag">Ekonomi</span>
-                    <span class="card-tag">2024</span>
-                </div>
-                <button class="card-view-btn">View Map →</button>
-            </div>
-        </article>
-
-        <!-- Card 5 -->
-        <article class="catalog-card" data-category="lingkungan" data-type="raster">
-            <div class="card-image">
-                <img src="https://i.imgur.com/7JcD2kX.png" alt="Tutupan Lahan" loading="lazy">
-                <span class="card-badge">SAT</span>
-                <div class="card-overlay">
-                    <div class="card-actions">
-                        <button class="card-action-btn">Unduh</button>
-                        <button class="card-action-btn primary">Preview</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <h3 class="card-title">Tutupan Lahan 2024</h3>
-                <div class="card-author">
-                    <div class="card-author-avatar">L</div>
-                    <span>DLH Provinsi</span>
-                </div>
-            </div>
-            <div class="card-footer">
-                <div class="card-tags">
-                    <span class="card-tag">Lingkungan</span>
-                    <span class="card-tag">Satelit</span>
-                </div>
-                <button class="card-view-btn">View Map →</button>
-            </div>
-        </article>
-
-        <!-- Card 6 -->
-        <article class="catalog-card" data-category="sosial" data-type="point">
-            <div class="card-image">
-                <img src="https://i.imgur.com/9Z5Zf7L.png" alt="Fasilitas Publik" loading="lazy">
-                <span class="card-badge">SOC</span>
-                <span class="card-meta">
-                    <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.566a1 1 0 01.745.334l3.898 3.898a1 1 0 001.414 0l3.898-3.898a1 1 0 01.745-.334H17a2 2 0 002-2V5a1 1 0 00-1-1H3zm8.5 2.5a.5.5 0 01.5.5v3.75a.5.5 0 01-1 0V6a.5.5 0 01.5-.5z" clip-rule="evenodd"/></svg>
-                    12 POI
-                </span>
-                <div class="card-overlay">
-                    <div class="card-actions">
-                        <button class="card-action-btn">Unduh</button>
-                        <button class="card-action-btn primary">Preview</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <h3 class="card-title">Fasilitas Publik & Layanan</h3>
-                <div class="card-author">
-                    <div class="card-author-avatar">S</div>
-                    <span>Dinas Sosial</span>
-                </div>
-            </div>
-            <div class="card-footer">
-                <div class="card-tags">
-                    <span class="card-tag">Sosial</span>
-                    <span class="card-tag">POI</span>
-                </div>
-                <button class="card-view-btn">View Map →</button>
-            </div>
-        </article>
+        @endforelse
 
     </div>
-
-    <!-- Empty State (hidden by default) -->
-    <div class="empty-state" id="emptyState" style="display: none;">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <h3>Tidak ada data yang ditemukan</h3>
-        <p>Coba ubah kata kunci atau reset filter untuk melihat semua data.</p>
-        <button class="filter-btn reset" id="emptyResetBtn" style="margin-top: 1rem;">Reset Filter</button>
-    </div>
-
 </section>
 
 
@@ -1004,28 +858,28 @@
             <!-- Stat 1 -->
             <div class="stat-card">
                 <div class="stat-icon">🗂️</div>
-                <div class="stat-value" data-target="50">0</div>
+                <div class="stat-value" data-target="{{ $totalKategori ?? 0 }}">0</div>
                 <div class="stat-label">Jenis Data</div>
             </div>
 
             <!-- Stat 2 -->
             <div class="stat-card">
                 <div class="stat-icon">🗺️</div>
-                <div class="stat-value" data-target="120">0</div>
+                <div class="stat-value" data-target="{{ $totalPeta ?? 0 }}">0</div>
                 <div class="stat-label">Peta Aktif</div>
             </div>
 
             <!-- Stat 3 -->
             <div class="stat-card">
                 <div class="stat-icon">👥</div>
-                <div class="stat-value" data-target="15000">0</div>
+                <div class="stat-value" data-target="{{ $totalPengguna ?? 0 }}">0</div>
                 <div class="stat-label">Pengguna</div>
             </div>
 
             <!-- Stat 4 -->
             <div class="stat-card">
                 <div class="stat-icon">🏛️</div>
-                <div class="stat-value" data-target="25">0</div>
+                <div class="stat-value" data-target="{{ $totalInstansi ?? 0 }}">0</div>
                 <div class="stat-label">Instansi Mitra</div>
             </div>
 
@@ -1182,8 +1036,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Show/hide empty state
-        emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
-        catalogGrid.style.display = visibleCount === 0 ? 'none' : 'grid';
+        if(emptyState && catalogGrid) {
+            emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+            catalogGrid.style.display = visibleCount === 0 ? 'none' : 'grid';
+        }
         
         // Dispatch event for external listeners
         window.dispatchEvent(new CustomEvent('catalog:filtered', { detail: { filters, visibleCount } }));
@@ -1197,8 +1053,10 @@ document.addEventListener('DOMContentLoaded', function() {
         updateActiveFiltersDisplay();
         
         cards.forEach(card => card.style.display = 'flex');
-        emptyState.style.display = 'none';
-        catalogGrid.style.display = 'grid';
+        if(emptyState && catalogGrid) {
+            emptyState.style.display = 'none';
+            catalogGrid.style.display = 'grid';
+        }
     }
     
     // Event listeners
@@ -1243,7 +1101,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         
-        step();
+        if (target > 0) step();
     }
     
     // Trigger animation when stats section is visible
@@ -1254,8 +1112,8 @@ document.addEventListener('DOMContentLoaded', function() {
         entries.forEach(entry => {
             if(entry.isIntersecting) {
                 statValues.forEach(el => {
-                    const target = parseInt(el.dataset.target);
-                    if(!el.classList.contains('animated')) {
+                    const target = parseInt(el.dataset.target) || 0;
+                    if(!el.classList.contains('animated') && target > 0) {
                         el.classList.add('animated', 'animate');
                         animateCounter(el, target);
                     }
@@ -1266,93 +1124,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }, { threshold: 0.3 });
     
     if(statsSection) observer.observe(statsSection);
-
-
-    // =========================
-    // 🎴 CARD INTERACTIONS
-    // =========================
-    // View button - navigate to map
-    document.querySelectorAll('.card-view-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const card = this.closest('.catalog-card');
-            const title = card.querySelector('.card-title').textContent;
-            
-            // Show feedback
-            this.textContent = 'Memuat...';
-            this.disabled = true;
-            
-            // Simulate navigation (replace with actual route)
-            setTimeout(() => {
-                // window.location.href = `/geo?layer=${encodeURIComponent(title)}`;
-                alert(`🗺️ Membuka peta: ${title}\n\n(Integrasi dengan route geoportal)`);
-                this.textContent = 'View Map →';
-                this.disabled = false;
-            }, 800);
-        });
-    });
-    
-    // Preview button - open modal or preview pane
-    document.querySelectorAll('.card-action-btn.primary').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const card = this.closest('.catalog-card');
-            const title = card.querySelector('.card-title').textContent;
-            const img = card.querySelector('img').src;
-            
-            // Simple preview notification (replace with modal)
-            showNotification(`👁️ Preview: ${title}`, 'info');
-        });
-    });
-    
-    // Download button
-    document.querySelectorAll('.card-action-btn:not(.primary)').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            showNotification('⬇️ Memulai unduhan...', 'success');
-            // Add actual download logic here
-        });
-    });
-
-
-    // =========================
-    // 🔔 NOTIFICATION HELPER
-    // =========================
-    function showNotification(message, type = 'info') {
-        // Remove existing
-        document.getElementById('catalog-notif')?.remove();
-        
-        const colors = {
-            success: 'bg-green-600',
-            error: 'bg-red-600',
-            info: 'bg-gray-800'
-        };
-        
-        const icons = { success: '✅', error: '⚠️', info: 'ℹ️' };
-        
-        const notif = document.createElement('div');
-        notif.id = 'catalog-notif';
-        notif.className = `fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-2xl z-50 text-white text-sm font-medium ${colors[type]} flex items-center gap-3 animate-[slideIn_0.3s_ease]`;
-        notif.innerHTML = `<span class="text-lg">${icons[type]}</span><span>${message}</span>`;
-        
-        document.body.appendChild(notif);
-        
-        // Auto remove
-        setTimeout(() => {
-            notif.style.opacity = '0';
-            notif.style.transform = 'translateY(10px)';
-            notif.style.transition = 'all 0.3s ease';
-            setTimeout(() => notif.remove(), 300);
-        }, 2500);
-    }
-    
-    // Add slideIn animation keyframes if not exists
-    if(!document.querySelector('#notif-styles')) {
-        const style = document.createElement('style');
-        style.id = 'notif-styles';
-        style.textContent = `@keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); }}`;
-        document.head.appendChild(style);
-    }
-
 
     // =========================
     // ♿ KEYBOARD SHORTCUTS

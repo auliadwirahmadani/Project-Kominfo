@@ -12,7 +12,7 @@ class MapController extends Controller
      */
     public function index()
     {
-        // ✅ TAMBAHKAN with('metadata') agar data dari tabel metadata_layer ikut terbawa
+        // ✅ Load data beserta relasi metadatanya
         $layers = GeospatialLayer::with('metadata')
                     ->where('status_verifikasi', 'approved')
                     ->where('is_published', 1)
@@ -50,9 +50,9 @@ class MapController extends Controller
                 'layer_name'    => $layer->layer_name,
                 'description'   => $layer->description,
                 'file_path'     => $layer->file_path,
-                'url'           => asset('storage/' . $layer->file_path),
+                'url'           => asset('storage/' . str_replace('public/', '', $layer->file_path)),
                 'created_at'    => $layer->created_at,
-                // ✅ Kirim data metadata ke JSON
+                // ✅ Kirim data metadata ke JSON agar terbaca saat difilter
                 'metadata'      => $layer->metadata 
             ];
         });
@@ -67,25 +67,28 @@ class MapController extends Controller
     {
         $keyword = $request->input('q');
 
+        // 1. Mulai query dengan relasi metadata
         $query = GeospatialLayer::with('metadata')
                     ->where('status_verifikasi', 'approved')
                     ->where('is_published', 1);
 
+        // 2. Filter berdasarkan keyword nama layer
         if (!empty($keyword)) {
             $query->where('layer_name', 'LIKE', '%' . $keyword . '%');
         }
 
         $layers = $query->get();
 
+        // 3. Format ulang data untuk response JSON AJAX
         $formattedLayers = $layers->map(function($layer) {
             return [
                 'geospatial_id' => $layer->geospatial_id,
                 'layer_name'    => $layer->layer_name,
                 'description'   => $layer->description,
                 'file_path'     => $layer->file_path,
-                'url'           => asset('storage/' . $layer->file_path),
+                'url'           => asset('storage/' . str_replace('public/', '', $layer->file_path)),
                 'created_at'    => $layer->created_at,
-                // ✅ Kirim data metadata ke JSON
+                // ✅ Kirim data metadata ke JSON agar terbaca saat dicari
                 'metadata'      => $layer->metadata 
             ];
         });

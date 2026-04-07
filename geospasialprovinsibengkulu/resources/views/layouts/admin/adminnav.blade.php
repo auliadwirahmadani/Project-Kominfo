@@ -6,13 +6,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Geoportal Provinsi Bengkulu')</title>
 
-    <!-- ✅ Tailwind CSS (HAPUS SPASI DI URL) -->
+    <!-- ✅ Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- ✅ Font Awesome (HAPUS SPASI DI URL) -->
+    <!-- ✅ Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- ✅ Google Fonts (PERBAIKI FONT FAMILY) -->
+    <!-- ✅ Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -157,15 +157,7 @@
                     <span class="font-medium">Kelola Pengguna</span>
                 </a>
 
-                <!-- MASTER REFERENSI -->
-                <a href="{{ route('admin.masterreferensi') }}"
-                   class="menu-item flex items-center gap-3 px-4 py-3 rounded-lg
-                   {{ Request::routeIs('admin.masterreferensi*') ? 'menu-active bg-white/10 text-white' : 'hover:bg-white/10 text-red-200' }}">
-                    <i class="fas fa-book w-5"></i>
-                    <span class="font-medium">Data Metadata</span>
-                </a>
-
-                <!-- ✅ DATA GEOSPASIAL - PERBAIKI ROUTE & ACTIVE STATE -->
+                <!-- ✅ DATA GEOSPASIAL (Dipindah mendahului Data Metadata) -->
                 <a href="{{ route('admin.geospasial.index') }}"
                    class="menu-item flex items-center gap-3 px-4 py-3 rounded-lg
                    {{ Request::routeIs('admin.geospasial*') ? 'menu-active bg-white/10 text-white' : 'hover:bg-white/10 text-red-200' }}">
@@ -173,6 +165,15 @@
                     <span class="font-medium">Data Geospasial</span>
                 </a>
 
+                <!-- MASTER REFERENSI (Data Metadata) -->
+                <a href="{{ route('admin.masterreferensi') }}"
+                   class="menu-item flex items-center gap-3 px-4 py-3 rounded-lg
+                   {{ Request::routeIs('admin.masterreferensi*') ? 'menu-active bg-white/10 text-white' : 'hover:bg-white/10 text-red-200' }}">
+                    <i class="fas fa-book w-5"></i>
+                    <span class="font-medium">Data Metadata</span>
+                </a>
+
+                <!-- PUBLIKASI DATA -->
                <a href="{{ route('admin.publikasi') }}"
                    class="menu-item flex items-center gap-3 px-4 py-3 rounded-lg
                    {{ Request::routeIs('admin.publikasi*') ? 'menu-active bg-white/10 text-white' : 'hover:bg-white/10 text-red-200' }}">

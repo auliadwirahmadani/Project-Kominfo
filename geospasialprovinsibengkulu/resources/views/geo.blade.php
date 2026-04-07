@@ -224,46 +224,63 @@ window.loadMapData = function(layersData) {
                     style: styleDefault,
                     onEachFeature: function(feature, layer) {
                         var props = feature.properties || {};
-                        var meta = item.metadata || {}; // HUBUNGKAN KE DATABASE METADATA_LAYER
+                        
+                        // 1. Ambil data metadata dari database (hasil with('metadata') di Controller)
+                        var meta = item.metadata || {}; 
+                        
+                        // 2. LOGIKA MAPPING OTOMATIS (Mencari nama kolom Inggris vs Indonesia)
+                        let valTitle      = meta.judul || meta.title || item.layer_name || "Data Spasial";
+                        let valIdentifier = meta.identifier || meta.identifier_peta || '-';
+                        let valAbstrak    = meta.abstract || meta.abstrak || meta.abstrak_deskripsi_peta || 'Tidak ada deskripsi tersedia.';
+                        let valInstansi   = meta.organization || meta.organisasi || meta.instansi || '-';
+                        let valTipeData   = meta.data_type || meta.tipe_data || '-';
+                        let valTahun      = meta.year || meta.tahun || '-';
+                        let valPublikasi  = meta.publication_date || meta.waktu_publikasi || '-';
+                        let valSumber     = meta.source || meta.sumber_data || '-';
+                        let valCRS        = meta.crs || meta.sistem_koordinat || '-';
+                        let valSkala      = meta.scale || meta.skala || '-';
+                        let valProtokol   = meta.distribution_protocol || meta.protokol_distribusi || '-';
+                        let valUrlSvc     = meta.distribution_url || meta.url_distribusi || '-';
+                        let valLayerSvc   = meta.service_layer_name || meta.nama_layer_service || '-';
 
-                        var regionName = props.NAMOBJ || props.Name || props.name || item.layer_name || "Detail Wilayah";
+                        var regionName = props.NAMOBJ || props.Name || props.name || "Area Terpilih";
 
                         // ====================================================
-                        // 🚀 POPUP KONTEN (MENGGUNAKAN DATA METADATA ASLI)
+                        // 🚀 POPUP KONTEN (TEMA MERAH PUTIH)
                         // ====================================================
                         let popupHTML = `
                             <div class="w-full">
                                 <div class="metadata-header">
-                                    <div style="font-size: 10px; opacity: 0.9; font-weight: bold; text-transform: uppercase;">Geoportal Metadata</div>
-                                    <div style="font-size: 16px; font-weight: 800; line-height: 1.2; margin-top: 2px;">${meta.title || item.layer_name}</div>
-                                    <div style="font-size: 11px; margin-top: 5px; opacity: 0.8;"><i class="fas fa-map-marker-alt mr-1"></i> ${regionName}</div>
+                                    <div style="font-size: 10px; opacity: 0.9; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Geoportal Metadata</div>
+                                    <div style="font-size: 16px; font-weight: 800; line-height: 1.2; margin-top: 2px;">${valTitle}</div>
+                                    <div style="font-size: 11px; margin-top: 5px; opacity: 0.8;"><i class="fas fa-map-marker-alt mr-1"></i> Area: ${regionName}</div>
                                 </div>
                                 
                                 <div class="metadata-body custom-scroll">
                                     <div class="metadata-section-title">Abstrak / Deskripsi</div>
-                                    <div class="abstrak-box">${meta.abstract || 'Tidak ada deskripsi tersedia untuk layer ini.'}</div>
+                                    <div class="abstrak-box">${valAbstrak}</div>
 
                                     <div class="metadata-section-title">Informasi Umum</div>
                                     <table class="metadata-table">
-                                        <tr><td class="metadata-label">Identifier</td><td class="metadata-value">${meta.identifier || '-'}</td></tr>
-                                        <tr><td class="metadata-label">Instansi</td><td class="metadata-value">${meta.organization || '-'}</td></tr>
-                                        <tr><td class="metadata-label">Tipe Data</td><td class="metadata-value">${meta.data_type || '-'}</td></tr>
-                                        <tr><td class="metadata-label">Tahun</td><td class="metadata-value">${meta.year || '-'}</td></tr>
-                                        <tr><td class="metadata-label">Publikasi</td><td class="metadata-value">${meta.publication_date || '-'}</td></tr>
+                                        <tr><td class="metadata-label">Identifier</td><td class="metadata-value">${valIdentifier}</td></tr>
+                                        <tr><td class="metadata-label">Instansi</td><td class="metadata-value">${valInstansi}</td></tr>
+                                        <tr><td class="metadata-label">Tipe Data</td><td class="metadata-value">${valTipeData}</td></tr>
+                                        <tr><td class="metadata-label">Tahun</td><td class="metadata-value">${valTahun}</td></tr>
+                                        <tr><td class="metadata-label">Publikasi</td><td class="metadata-value">${valPublikasi}</td></tr>
                                     </table>
 
                                     <div class="metadata-section-title">Detail Teknis</div>
                                     <table class="metadata-table">
-                                        <tr><td class="metadata-label">Sumber Data</td><td class="metadata-value">${meta.source || '-'}</td></tr>
-                                        <tr><td class="metadata-label">CRS</td><td class="metadata-value">${meta.crs || '-'}</td></tr>
-                                        <tr><td class="metadata-label">Skala</td><td class="metadata-value">${meta.scale || '-'}</td></tr>
+                                        <tr><td class="metadata-label">Sumber Data</td><td class="metadata-value">${valSumber}</td></tr>
+                                        <tr><td class="metadata-label">CRS</td><td class="metadata-value">${valCRS}</td></tr>
+                                        <tr><td class="metadata-label">Skala</td><td class="metadata-value">${valSkala}</td></tr>
                                     </table>
 
-                                    <div class="metadata-section-title">Distribusi</div>
+                                    <div class="metadata-section-title">Distribusi & Service</div>
                                     <table class="metadata-table">
-                                        <tr><td class="metadata-label">Protokol</td><td class="metadata-value">${meta.distribution_protocol || '-'}</td></tr>
-                                        <tr><td class="metadata-label">Layer Svc</td><td class="metadata-value">${meta.service_layer_name || '-'}</td></tr>
-                                        <tr><td class="metadata-label">URL</td><td class="metadata-value" style="word-break: break-all; font-size: 10px;">${meta.distribution_url || '-'}</td></tr>
+                                        <tr><td class="metadata-label">Protokol</td><td class="metadata-value">${valProtokol}</td></tr>
+                                        <tr><td class="metadata-label">Layer Svc</td><td class="metadata-value">${valLayerSvc}</td></tr>
+                                        <tr><td class="metadata-label">URL</td><td class="metadata-value" style="word-break: break-all; font-size: 10px;">${valUrlSvc}</td></tr>
                                     </table>
                                 </div>
                             </div>
@@ -302,7 +319,7 @@ window.loadMapData = function(layersData) {
 };
 
 // ==========================================
-// 2. INISIALISASI PETA (TETAP SAMA)
+// 2. INISIALISASI PETA
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
     
