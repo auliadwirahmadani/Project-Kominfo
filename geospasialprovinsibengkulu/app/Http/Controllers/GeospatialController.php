@@ -259,7 +259,9 @@ class GeospatialController extends Controller
         }
 
         if ($request->filled('year')) {
-            $query->whereYear('created_at', $request->year);
+            $query->whereHas('metadata', function ($q) use ($request) {
+                $q->where('year', $request->year);
+            });
         }
 
         if ($request->filled('id')) {

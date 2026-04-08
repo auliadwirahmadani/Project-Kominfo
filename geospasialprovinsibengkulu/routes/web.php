@@ -124,6 +124,8 @@ Route::prefix('verifikator')
 
         // Metadata
         Route::get('/metadata', [VerifikatorController::class, 'metadata'])->name('metadata.index');
+        Route::post('/metadata/{id}/verify', [VerifikatorController::class, 'processMetadataVerification'])
+            ->name('metadata.verify.process');
 
         // Monitoring
         Route::get('/monitoring', [VerifikatorController::class, 'monitoring'])->name('monitoring.index');

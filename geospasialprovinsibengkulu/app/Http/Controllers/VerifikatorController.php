@@ -69,8 +69,32 @@ class VerifikatorController extends Controller
      */
     public function metadata()
     {
-        $metadatas = MetadataLayer::with('geospatial')->latest()->paginate(10);
+        $metadatas = MetadataLayer::with(['geospatial', 'geospatial.category'])->latest()->paginate(10);
         return view('layouts.verifikator.periksametadata', compact('metadatas'));
+    }
+
+    /**
+     * Memproses keputusan verifikasi melalui halaman Metadata
+     * (Mengubah status_verifikasi & is_published di geospatial_layer terkait)
+     */
+    public function processMetadataVerification(Request $request, $id)
+    {
+        $request->validate([
+            'status_verifikasi' => 'required|in:approved,rejected,pending',
+            'catatan'           => 'nullable|string|max:500',
+        ]);
+
+        $metadata = MetadataLayer::with('geospatial')->findOrFail($id);
+        $layer    = $metadata->geospatial;
+
+        if ($layer) {
+            $layer->status_verifikasi = $request->status_verifikasi;
+            $layer->is_published = ($request->status_verifikasi === 'approved');
+            $layer->save();
+        }
+
+        return redirect()->route('verifikator.metadata.index')
+                         ->with('success', '✅ Status metadata berhasil diperbarui!');
     }
 
     /**

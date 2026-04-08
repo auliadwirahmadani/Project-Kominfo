@@ -283,61 +283,44 @@
 ========================= -->
 <section id="katalog" class="container mx-auto px-4 py-8">
 
-    {{-- ===== FILTER BAR (style geo page) ===== --}}
+    {{-- ===== FILTER BAR ===== --}}
     <form action="{{ route('catalog') }}" method="GET" id="filterForm">
     <div class="flex flex-wrap items-center gap-3 mb-6 p-3 bg-white rounded-2xl shadow-sm border border-gray-100">
 
-        {{-- Search Input --}}
-        <div class="flex-1 min-w-[200px] relative" x-data="catalogSearch" x-init="initData()">
-            <button @click="toggle()" type="button"
+        {{-- Search Input (Vanilla JS) --}}
+        <div class="flex-1 min-w-[200px] relative" id="catalogSearchWrapper">
+            <button onclick="toggleCatalogSearch(event)" type="button"
                     class="w-full flex items-center justify-between pl-4 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-gray-700 text-sm hover:border-red-400 hover:bg-red-50/30 transition focus:outline-none">
                 <div class="flex items-center gap-2 overflow-hidden">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
-                    <span class="truncate" x-text="selected ? selected.name : (searchQuery || 'Cari data layer...')" :class="selected ? 'text-gray-800 font-medium' : 'text-gray-400'"></span>
+                    <span class="truncate" id="catalogSearchLabel"
+                          style="{{ request('search') ? 'color:#1f2937;font-weight:500' : 'color:#9ca3af' }}">{{ request('search') ?: 'Cari data layer...' }}</span>
                 </div>
-                <svg class="w-4 h-4 text-gray-400 shrink-0 transition-transform" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
-
             {{-- Hidden input untuk submit form --}}
-            <input type="hidden" name="search" :value="selected ? selected.name : searchQuery">
-
-            {{-- Dropdown --}}
-            <div x-show="open" @click.outside="open = false"
-                 x-transition:enter="transition ease-out duration-150"
-                 x-transition:enter-start="opacity-0 translate-y-1"
-                 x-transition:enter-end="opacity-100 translate-y-0"
-                 x-transition:leave="transition ease-in duration-100"
-                 x-transition:leave-start="opacity-100 translate-y-0"
-                 x-transition:leave-end="opacity-0 translate-y-1"
-                 class="absolute left-0 top-full mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-200 z-[200] overflow-hidden"
-                 style="display:none;">
+            <input type="hidden" name="search" id="catalogSearchHidden" value="{{ request('search') }}">
+            
+            {{-- Dropdown Panel --}}
+            <div id="catalogSearchPanel"
+                 class="absolute left-0 top-full mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden"
+                 style="display:none; z-index:200;">
                 <div class="p-2.5 border-b border-gray-100 bg-gray-50">
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                             <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </span>
-                        <input type="text" x-model="query" x-ref="searchInput" @input="search()"
+                        <input type="text" id="catalogSearchInput" oninput="catalogSearchFilter(this.value)"
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();catalogSearchSubmitQuery(this.value);}"
                                placeholder="Ketik nama data..."
                                class="w-full pl-8 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-red-400 text-gray-800">
                     </div>
                 </div>
-                <ul class="max-h-52 overflow-y-auto">
-                    <template x-for="layer in filteredLayers" :key="layer.id">
-                        <li @click="selectLayer(layer)"
-                            class="px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-red-50 border-b border-gray-50 last:border-0 flex items-center gap-2">
-                            <svg class="w-3.5 h-3.5 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                            <span class="truncate" x-text="layer.name"></span>
-                        </li>
-                    </template>
-                    <li x-show="filteredLayers.length === 0" class="px-4 py-5 text-sm text-gray-400 text-center">
-                        <svg class="w-8 h-8 mx-auto mb-1 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Data tidak ditemukan
-                    </li>
-                </ul>
-                <div x-show="selected" class="p-2 border-t border-gray-100 bg-gray-50">
-                    <button type="button" @click="clearSearch()" class="w-full text-xs text-gray-500 hover:text-red-600 py-1 transition">✕ Hapus pilihan</button>
+                <ul id="catalogSearchList" class="max-h-52 overflow-y-auto"></ul>
+                <div id="catalogSearchClearBox" class="p-2 border-t border-gray-100 bg-gray-50" style="{{ request('search') ? '' : 'display:none;' }}">
+                    <button type="button" onclick="catalogSearchClear()" class="w-full text-xs text-gray-500 hover:text-red-600 py-1 transition">✕ Hapus pilihan</button>
                 </div>
             </div>
         </div>
@@ -345,9 +328,10 @@
         {{-- Divider --}}
         <div class="hidden sm:block w-px h-8 bg-gray-200"></div>
 
-        {{-- Filter Panel Button --}}
-        <div class="relative" x-data="{ filterOpen: false }">
-            <button type="button" @click="filterOpen = !filterOpen"
+        {{-- Filter Panel Button (Vanilla JS) --}}
+        <div class="relative" id="catalogFilterWrapper">
+            <button type="button" onclick="toggleCatalogFilter(event)"
+                    id="catalogFilterBtn"
                     class="flex items-center gap-2 px-4 py-2.5 border rounded-full text-sm font-medium transition
                            {{ request()->hasAny(['category', 'year', 'type']) ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-700 border-gray-200 hover:border-red-400 hover:text-red-600' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -360,15 +344,9 @@
             </button>
 
             {{-- Filter Dropdown Panel --}}
-            <div x-show="filterOpen" @click.outside="filterOpen = false"
-                 x-transition:enter="transition ease-out duration-150"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-100"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-95"
-                 class="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-2xl py-3 z-[200] border border-gray-100"
-                 style="display:none;">
+            <div id="catalogFilterPanel"
+                 class="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-2xl py-3 border border-gray-100"
+                 style="display:none; z-index:300;">
 
                 <div class="px-4 pb-2 border-b border-gray-100 flex items-center justify-between">
                     <h4 class="font-semibold text-gray-800 text-sm">Filter Data</h4>
@@ -391,18 +369,6 @@
                         </select>
                     </div>
 
-                    {{-- Tipe Data --}}
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tipe Data</label>
-                        <select name="type" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 focus:outline-none bg-gray-50">
-                            <option value="">Semua Tipe</option>
-                            <option value="vector" {{ request('type') == 'vector' ? 'selected' : '' }}>Vector</option>
-                            <option value="raster" {{ request('type') == 'raster' ? 'selected' : '' }}>Raster</option>
-                            <option value="wms"    {{ request('type') == 'wms'    ? 'selected' : '' }}>WMS</option>
-                            <option value="wfs"    {{ request('type') == 'wfs'    ? 'selected' : '' }}>WFS</option>
-                        </select>
-                    </div>
-
                     {{-- Tahun --}}
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tahun</label>
@@ -419,7 +385,8 @@
                     <a href="{{ route('catalog') }}" class="flex-1 text-center px-3 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
                         Reset
                     </a>
-                    <button type="submit" class="flex-1 px-3 py-2 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition">
+                    <button type="submit" onclick="document.getElementById('catalogFilterPanel').style.display='none';"
+                            class="flex-1 px-3 py-2 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition">
                         Terapkan
                     </button>
                 </div>
@@ -442,7 +409,7 @@
     </div>
     </form>
 
-    <!-- ✅ Cards Grid - MENGGUNAKAN VARIABEL DATABASE YANG BENAR -->
+    <!-- ✅ Cards Grid -->
     <div class="catalog-grid" id="catalogGrid">
         @forelse($datasets as $data)
         <article class="catalog-card">
@@ -484,7 +451,7 @@
                     <div>
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tahun</p>
                         <p class="text-sm font-medium text-gray-700">
-                            {{ $data->metadata->data_year ?? $data->created_at->format('Y') }}
+                            {{ $data->metadata->year ?? $data->created_at->format('Y') }}
                         </p>
                     </div>
                 </div>
@@ -693,62 +660,104 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// =========================
-// 🔍 ALPINE COMPONENT: catalogSearch (sama dengan layerSearch di geo)
-// =========================
-document.addEventListener('alpine:init', () => {
-    Alpine.data('catalogSearch', () => ({
-        open: false,
-        query: '',
-        searchQuery: @json(request("search") ?? ''),
-        layers: @json($layersForSearch),
-        filteredLayers: [],
-        selected: null,
+// =============================================
+// 🔍 CATALOG SEARCH DROPDOWN (Pure Vanilla JS)
+// =============================================
+(function() {
+    var _layers = @json($layersForSearch ?? []);
 
-        initData() {
-            this.filteredLayers = this.layers;
-
-            // Tandai pilihan jika ada pencarian aktif dari URL
-            const currentSearch = @json(request("search") ?? '');
-            if (currentSearch) {
-                const found = this.layers.find(l => l.name === currentSearch);
-                if (found) this.selected = found;
-                else this.searchQuery = currentSearch;
-            }
-        },
-
-        toggle() {
-            this.open = !this.open;
-            if (this.open) {
-                this.query = '';
-                this.filteredLayers = this.layers;
-                setTimeout(() => this.$refs.searchInput?.focus(), 80);
-            }
-        },
-
-        search() {
-            const q = this.query.toLowerCase().trim();
-            this.filteredLayers = q === ''
-                ? this.layers
-                : this.layers.filter(l => l.name.toLowerCase().includes(q));
-        },
-
-        selectLayer(layer) {
-            this.selected = layer;
-            this.searchQuery = layer.name;
-            this.open = false;
-            this.$nextTick(() => {
-                document.getElementById('filterForm')?.submit();
-            });
-        },
-
-        clearSearch() {
-            this.selected = null;
-            this.searchQuery = '';
-            this.query = '';
-            this.filteredLayers = this.layers;
+    function renderList(list) {
+        var ul = document.getElementById('catalogSearchList');
+        if (!ul) return;
+        if (list.length === 0) {
+            ul.innerHTML = '<li class="px-4 py-5 text-sm text-gray-400 text-center">Data tidak ditemukan</li>';
+            return;
         }
-    }));
+        ul.innerHTML = list.map(function(l) {
+            return '<li onclick="catalogSearchSelectLayer(' + l.id + ')" class="px-4 py-2.5 text-sm text-gray-700 cursor-pointer hover:bg-red-50 border-b border-gray-50 last:border-0 flex items-center gap-2">'
+                 + '<svg class="w-3.5 h-3.5 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>'
+                 + '<span class="truncate">' + l.name + '</span></li>';
+        }).join('');
+    }
+
+    window.toggleCatalogSearch = function(e) {
+        e && e.stopPropagation();
+        var panel = document.getElementById('catalogSearchPanel');
+        if (!panel) return;
+        var visible = panel.style.display === 'block';
+        panel.style.display = visible ? 'none' : 'block';
+        if (!visible) {
+            renderList(_layers);
+            var inp = document.getElementById('catalogSearchInput');
+            if (inp) { inp.value = ''; setTimeout(function(){ inp.focus(); }, 80); }
+        }
+    };
+
+    window.catalogSearchFilter = function(q) {
+        q = (q || '').toLowerCase().trim();
+        renderList(q === '' ? _layers : _layers.filter(function(l){ return l.name.toLowerCase().indexOf(q) !== -1; }));
+    };
+
+    window.catalogSearchSelectLayer = function(id) {
+        var layer = _layers.find(function(l){ return l.id == id; });
+        if (!layer) return;
+        var label = document.getElementById('catalogSearchLabel');
+        if (label) { label.textContent = layer.name; label.style.color = '#1f2937'; label.style.fontWeight = '500'; }
+        var hidden = document.getElementById('catalogSearchHidden');
+        if (hidden) hidden.value = layer.name;
+        var panel = document.getElementById('catalogSearchPanel');
+        if (panel) panel.style.display = 'none';
+        var clearBox = document.getElementById('catalogSearchClearBox');
+        if (clearBox) clearBox.style.display = 'block';
+        // Auto-submit form
+        document.getElementById('filterForm').submit();
+    };
+
+    window.catalogSearchSubmitQuery = function(q) {
+        var hidden = document.getElementById('catalogSearchHidden');
+        if (hidden) hidden.value = q;
+        var label = document.getElementById('catalogSearchLabel');
+        if (label) { label.textContent = q || 'Cari data layer...'; }
+        var panel = document.getElementById('catalogSearchPanel');
+        if (panel) panel.style.display = 'none';
+        document.getElementById('filterForm').submit();
+    };
+
+    window.catalogSearchClear = function() {
+        var label = document.getElementById('catalogSearchLabel');
+        if (label) { label.textContent = 'Cari data layer...'; label.style.color = '#9ca3af'; label.style.fontWeight = ''; }
+        var hidden = document.getElementById('catalogSearchHidden');
+        if (hidden) hidden.value = '';
+        var clearBox = document.getElementById('catalogSearchClearBox');
+        if (clearBox) clearBox.style.display = 'none';
+        document.getElementById('filterForm').submit();
+    };
+
+    // Close on outside click
+    document.addEventListener('click', function(e) {
+        var panel   = document.getElementById('catalogSearchPanel');
+        var wrapper = document.getElementById('catalogSearchWrapper');
+        if (panel && panel.style.display === 'block' && wrapper && !wrapper.contains(e.target)) {
+            panel.style.display = 'none';
+        }
+    });
+})();
+
+// =============================================
+// 🔽 CATALOG FILTER TOGGLE (Vanilla JS)
+// =============================================
+window.toggleCatalogFilter = function(e) {
+    e && e.stopPropagation();
+    var panel = document.getElementById('catalogFilterPanel');
+    if (!panel) return;
+    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+};
+document.addEventListener('click', function(e) {
+    var panel   = document.getElementById('catalogFilterPanel');
+    var wrapper = document.getElementById('catalogFilterWrapper');
+    if (panel && panel.style.display === 'block' && wrapper && !wrapper.contains(e.target)) {
+        panel.style.display = 'none';
+    }
 });
 </script>
 @endpush
