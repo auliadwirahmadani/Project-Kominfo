@@ -9,17 +9,17 @@ class DatasetController extends Controller
 {
     /**
      * ========================================================
-     * TAMPILKAN HALAMAN KATALOG DATASET (GRID BOX)
+     * TAMPILKAN HALAMAN KATALOG (GRID BOX - DAFTAR PETA)
+     * View: catalog.blade.php
      * ========================================================
      */
     public function index(Request $request)
     {
-        // 1. Ambil data layer yang sudah di-publish dan di-approve
         $query = GeospatialLayer::with(['metadata', 'category'])
                     ->where('status_verifikasi', 'approved')
                     ->where('is_published', 1);
 
-        // 2. Logika Kotak Pencarian (Mencari judul layer atau abstrak metadata)
+        // Pencarian
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -31,32 +31,35 @@ class DatasetController extends Controller
             });
         }
 
-        // 3. Logika Filter Tipe Data (Vector / Raster / Service)
+        // Filter Tipe Data
         if ($request->filled('type') && $request->type !== 'semua') {
             $query->whereHas('metadata', function($qMeta) use ($request) {
                 $qMeta->where('data_type', $request->type);
             });
         }
 
-        // Ambil data dengan paginasi, withQueryString() agar filter tidak hilang saat ganti halaman
+        // Mengirim variabel $datasets ke halaman catalog
         $datasets = $query->latest()->paginate(9)->withQueryString();
 
-        return view('dataset', compact('datasets')); 
+        // 👇 Arahkan ke file catalog.blade.php
+        return view('catalog', compact('datasets')); 
     }
 
     /**
      * ========================================================
-     * TAMPILKAN HALAMAN DETAIL DATASET
+     * TAMPILKAN HALAMAN DATASET (DETAIL PETA & METADATA)
+     * View: dataset.blade.php
      * ========================================================
      */
     public function show($id)
     {
-        // Ambil data layer beserta relasinya, pastikan datanya memang sudah di-publish
-        $layer = GeospatialLayer::with(['metadata', 'category'])
+        // Ambil data layer spesifik
+        $dataset = GeospatialLayer::with(['metadata', 'category'])
                     ->where('status_verifikasi', 'approved')
                     ->where('is_published', 1)
                     ->findOrFail($id);
 
-        return view('dataset-detail', compact('layer'));
+        // 👇 Arahkan ke file dataset.blade.php dengan variabel $dataset (Tunggal)
+        return view('dataset', compact('dataset'));
     }
 }

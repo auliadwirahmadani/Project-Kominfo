@@ -159,7 +159,8 @@ class AdminController extends Controller
     // ===============================
     public function profile()
     {
-        return view('admin.profile');
+        $user = auth()->user();
+        return view('layouts.admin.adminnav', compact('user'));
     }
 
     public function updateProfile(Request $request, $id)

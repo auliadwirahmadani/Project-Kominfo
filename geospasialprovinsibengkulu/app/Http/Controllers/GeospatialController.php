@@ -169,14 +169,14 @@ class GeospatialController extends Controller
      * ========================================================
      */
 
-    // Menampilkan LIST Dataset (Pencarian & Filter)
+    // Menampilkan HALAMAN KATALOG (Grid, Filter, & Statistik) -> view catalog.blade.php
     public function katalogDataset(Request $request)
     {
         $query = GeospatialLayer::with(['metadata', 'category'])
                     ->where('status_verifikasi', 'approved')
                     ->where('is_published', 1);
 
-        // Filter Pencarian di Navbar/Searchbar
+        // 1. Filter Pencarian di Navbar/Searchbar
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -187,75 +187,96 @@ class GeospatialController extends Controller
             });
         }
 
-        // Filter Dropdown Tipe (Vector, Raster, etc)
-        if ($request->filled('type') && $request->type !== 'semua') {
+        // 2. Filter Kategori (dari dropdown panel)
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        // 3. Filter Tipe Data (dari dropdown panel)
+        if ($request->filled('type')) {
             $query->whereHas('metadata', function($q) use ($request) {
                 $q->where('data_type', $request->type);
             });
         }
 
+        // 4. Filter Tahun (dari dropdown panel)
+        if ($request->filled('year')) {
+            $query->whereHas('metadata', function($q) use ($request) {
+                $q->where('year', $request->year);
+            });
+        }
+
+        // Ambil data peta (paginate 9 per halaman)
         $datasets = $query->latest()->paginate(9)->withQueryString();
 
-        /**
-         * 💡 SOLUSI ERROR:
-         * Mengirimkan 'dataset' => null agar line 3 di view dataset.blade.php
-         * ($dataset->metadata->title) tidak error saat membuka halaman katalog.
-         */
-        return view('dataset', [
-            'datasets' => $datasets,
-            'dataset'  => null 
-        ]);
+        // 3. Ambil data untuk Statistik di bawah halaman
+        $totalPeta       = GeospatialLayer::where('is_published', 1)->where('status_verifikasi', 'approved')->count();
+        $totalKategori   = Category::count();
+        $totalPengguna   = \App\Models\User::count() ?? 1;
+        $totalInstansi   = 5;
+        $categories      = Category::orderBy('category_name')->get();
+
+        // Data untuk Alpine.js search dropdown (semua layer publik)
+        $layersForSearch = GeospatialLayer::where('status_verifikasi', 'approved')
+                            ->where('is_published', 1)
+                            ->select('geospatial_id as id', 'layer_name as name')
+                            ->get();
+
+        // Kirim semua variabel ke view 'catalog'
+        return view('catalog', compact(
+            'datasets',
+            'totalPeta',
+            'totalKategori',
+            'totalInstansi',
+            'totalPengguna',
+            'categories',
+            'layersForSearch'
+        ));
     }
 
-    // Menampilkan DETAIL Dataset tunggal
+    // Menampilkan HALAMAN DETAIL Dataset tunggal -> view dataset.blade.php
     public function showDetail($id)
     {
+        // 1. Ambil data peta berdasarkan ID yang diklik
         $dataset = GeospatialLayer::with(['metadata', 'category'])
                     ->where('geospatial_id', $id)
                     ->where('status_verifikasi', 'approved')
                     ->firstOrFail();
 
-        /**
-         * 💡 SOLUSI ERROR:
-         * Mengirimkan 'datasets' => collect([]) agar loop daftar di View 
-         * tidak error saat membuka halaman detail.
-         */
-        return view('dataset', [
-            'dataset'  => $dataset,
-            'datasets' => collect([]) 
-        ]);
+        // 2. Kirim datanya ke halaman detail (dataset.blade.php)
+        return view('dataset', compact('dataset'));
     }
-    // ===========================================
-    // TAMBAHKAN FUNGSI INI UNTUK HALAMAN KATALOG
-    // ===========================================
-   // ===========================================
-    // TAMBAHKAN FUNGSI INI UNTUK HALAMAN KATALOG
-    // ===========================================
-    public function katalog()
+
+    // API Filter AJAX untuk peta (route: geospatial.filter)
+    public function filterData(Request $request): JsonResponse
     {
-        // Mengambil data layer yang sudah di-approve dan di-publish
-        $katalogData = GeospatialLayer::with('category')
-                            ->where('status_verifikasi', 'approved')
-                            ->where('is_published', true)
-                            ->latest()
-                            ->get(); 
+        $query = GeospatialLayer::with('metadata')
+                    ->where('status_verifikasi', 'approved')
+                    ->where('is_published', 1);
 
-        // Data untuk bagian statistik di bawah
-        $totalPeta = GeospatialLayer::where('is_published', true)->count();
-        $totalKategori = GeospatialLayer::distinct('category_id')->count('category_id');
-        
-        // KARENA BELUM ADA KOLOM INSTANSI DI DATABASE, KITA BUAT STATIS DULU:
-        $totalInstansi = 1; // Contoh: Anggap saja 1 instansi (Pemerintah Provinsi Bengkulu)
-        
-        // Total Pengguna
-        $totalPengguna = \App\Models\User::count();
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
 
-        return view('catalog', compact(
-            'katalogData', 
-            'totalPeta', 
-            'totalKategori', 
-            'totalInstansi', 
-            'totalPengguna'
-        ));
+        if ($request->filled('year')) {
+            $query->whereYear('created_at', $request->year);
+        }
+
+        if ($request->filled('id')) {
+            $query->where('geospatial_id', $request->id);
+        }
+
+        $layers = $query->get()->map(function ($layer) {
+            return [
+                'geospatial_id' => $layer->geospatial_id,
+                'layer_name'    => $layer->layer_name,
+                'description'   => $layer->description,
+                'file_path'     => $layer->file_path,
+                'url'           => asset('storage/' . str_replace('public/', '', $layer->file_path)),
+                'metadata'      => $layer->metadata,
+            ];
+        });
+
+        return response()->json(['layers' => $layers]);
     }
 }

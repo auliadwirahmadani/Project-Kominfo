@@ -12,7 +12,7 @@ class MetadataController extends Controller // ⬅️ Nama class WAJIB sama deng
     public function index()
     {
         $layers = GeospatialLayer::with(['category', 'metadata'])->get();
-        return view('admin.metadata.index', compact('layers'));
+        return view('layouts.admin.masterreferensi', compact('layers'));
     }
 
     public function store(Request $request)

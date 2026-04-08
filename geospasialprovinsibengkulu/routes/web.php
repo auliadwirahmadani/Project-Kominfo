@@ -15,22 +15,26 @@ use App\Http\Controllers\ProdusenController;
 |--------------------------------------------------------------------------
 */
 
+// Home / Main Map
 Route::get('/', [MapController::class, 'index'])->name('geo');
+
+// About Page
 Route::get('/about', fn() => view('about'))->name('about');
 
-// ✅ RUTE UNTUK KATALOG (Sudah Diupdate Menggunakan Controller)
-Route::get('/catalog', [GeospatialController::class, 'katalog'])->name('catalog');
-
-// ✅ RUTE UNTUK DATASET (Daftar Banyak Data)
+// ✅ 1. Katalog Data Publik (Halaman Grid/Kotak-kotak)
+Route::get('/catalog', [GeospatialController::class, 'katalogDataset'])->name('catalog');
 Route::get('/dataset', [GeospatialController::class, 'katalogDataset'])->name('dataset');
 
-// ✅ RUTE BARU UNTUK DETAIL DATASET (Satu Data Spesifik)
+// ✅ 2. Detail Dataset (Halaman Detail Maroon-Kuning)
 Route::get('/dataset/{id}', [GeospatialController::class, 'showDetail'])->name('dataset.show');
 
-// ===============================
-// ROUTE UNTUK FILTER PETA
-// ===============================
-Route::get('/geospatial/filter', [GeospatialController::class, 'filterData'])->name('geospatial.filter');
+// GeoJSON Public (Mini Map) - Route ini HARUS sebelum /geospatial/filter
+Route::get('/geospatial/{id}/geojson', [GeospatialController::class, 'getGeoJson'])
+    ->name('geospatial.geojson.public');
+
+// Filter AJAX
+Route::get('/geospatial/filter', [GeospatialController::class, 'filterData'])
+    ->name('geospatial.filter');
 
 
 /*
@@ -55,86 +59,43 @@ Route::prefix('admin')
     ->name('admin.')
     ->group(function () {
 
-        // ===============================
-        // DASHBOARD
-        // ===============================
-        Route::get('/dashboard', [AdminController::class, 'dashboard'])
-            ->name('dashboard');
+        // Dashboard
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-        // ===============================
-        // KELOLA PENGGUNA
-        // ===============================
-        Route::get('/pengguna', [AdminController::class, 'kelolapengguna'])
-            ->name('kelolapengguna');
+        // Kelola Pengguna
+        Route::get('/pengguna', [AdminController::class, 'kelolapengguna'])->name('kelolapengguna');
+        Route::post('/pengguna/store', [AdminController::class, 'storeUser'])->name('storeUser');
+        Route::put('/pengguna/update/{id}', [AdminController::class, 'updateUser'])->name('updateUser');
+        Route::delete('/pengguna/delete/{id}', [AdminController::class, 'destroyUser'])->name('deleteUser');
 
-        Route::post('/pengguna/store', [AdminController::class, 'storeUser'])
-            ->name('storeUser');
-
-        Route::put('/pengguna/update/{id}', [AdminController::class, 'updateUser'])
-            ->name('updateUser');
-
-        Route::delete('/pengguna/delete/{id}', [AdminController::class, 'destroyUser'])
-            ->name('deleteUser');
-
-        // ===============================
-        // KELOLA GEOSPASIAL (ADMIN)
-        // ===============================
+        // Resource Geospasial
         Route::resource('geospasial', GeospatialController::class);
 
-        // ===============================
-        // GEOEDIT - CUSTOM EDIT ROUTE
-        // ===============================
-        Route::get('/geoedit/{id}', [GeospatialController::class, 'edit'])
-            ->name('geoedit');
-        
-        Route::put('/geoedit/{id}', [GeospatialController::class, 'update'])
-            ->name('geoedit.update');
+        // Custom Edit (GeoEdit)
+        Route::get('/geoedit/{id}', [GeospatialController::class, 'edit'])->name('geoedit');
+        Route::put('/geoedit/{id}', [GeospatialController::class, 'update'])->name('geoedit.update');
 
-        // ===============================
-        // ROUTE PREVIEW & DOWNLOAD PETA 
-        // ===============================
+        // Preview & Download
         Route::get('/geospasial/{id}/geojson', [GeospatialController::class, 'getGeoJson'])
-            ->name('geospasial.geojson');
-
+            ->name('geospatial.geojson');
         Route::get('/geospasial/{id}/download', [GeospatialController::class, 'download'])
-            ->name('geospasial.download');
+            ->name('geospatial.download');
 
-        // ===============================
-        // MASTER REFERENSI
-        // ===============================
-        Route::get('/referensi', [AdminController::class, 'referensi'])
-            ->name('masterreferensi');
+        // Master Referensi
+        Route::get('/referensi', [AdminController::class, 'referensi'])->name('masterreferensi');
 
-        // ===============================
-        // KELOLA METADATA
-        // ===============================
-        Route::get('/metadata', [MetadataController::class, 'index'])
-            ->name('metadata.index');
+        // Metadata
+        Route::get('/metadata', [MetadataController::class, 'index'])->name('metadata.index');
+        Route::post('/metadata/store', [MetadataController::class, 'store'])->name('metadata.store');
+        Route::put('/metadata/update/{id}', [MetadataController::class, 'update'])->name('metadata.update');
+        Route::delete('/metadata/delete/{id}', [MetadataController::class, 'destroy'])->name('metadata.delete');
 
-        Route::post('/metadata/store', [MetadataController::class, 'store'])
-            ->name('metadata.store');
+        // Profile
+        Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
+        Route::put('/profile/update/{id}', [AdminController::class, 'updateProfile'])->name('updateProfile');
 
-        Route::put('/metadata/update/{id}', [MetadataController::class, 'update'])
-            ->name('metadata.update');
-
-        Route::delete('/metadata/delete/{id}', [MetadataController::class, 'destroy'])
-            ->name('metadata.delete');
-
-        // ===============================
-        // PROFILE
-        // ===============================
-        Route::get('/profile', [AdminController::class, 'profile'])
-            ->name('profile');
-            
-        Route::put('/profile/update/{id}', [AdminController::class, 'updateProfile'])
-            ->name('updateProfile');
-
-        // ===============================
-        // PUBLIKASI DATA
-        // ===============================
-        Route::get('/publikasi', [AdminController::class, 'publikasi'])
-            ->name('publikasi');
-
+        // Publikasi
+        Route::get('/publikasi', [AdminController::class, 'publikasi'])->name('publikasi');
     });
 
 
@@ -145,40 +106,33 @@ Route::prefix('admin')
 */
 
 Route::prefix('verifikator')
-    ->middleware(['auth']) 
+    ->middleware(['auth'])
     ->name('verifikator.')
     ->group(function () {
 
-        // ===============================
-        // DASHBOARD VERIFIKATOR
-        // ===============================
-        Route::get('/dashboard', [VerifikatorController::class, 'dashboard'])
-            ->name('dashboard');
+        // Dashboard
+        Route::get('/dashboard', [VerifikatorController::class, 'dashboard'])->name('dashboard');
 
-        // ===============================
-        // VERIFIKASI DATA GEOSPASIAL
-        // ===============================
-        Route::get('/geospasial', [VerifikatorController::class, 'geospasial'])
-            ->name('geospasial.index');
+        // Verifikasi Geospasial
+        Route::get('/geospasial', [VerifikatorController::class, 'geospasial'])->name('geospasial.index');
 
-        // ===============================
-        // PERIKSA METADATA
-        // ===============================
-        Route::get('/metadata', [VerifikatorController::class, 'metadata'])
-            ->name('metadata.index');
+        Route::get('/geospasial/{id}/verify', [VerifikatorController::class, 'showVerification'])
+            ->name('geospasial.verify');
 
-        // ===============================
-        // MONITORING STATUS
-        // ===============================
-        Route::get('/monitoring', [VerifikatorController::class, 'monitoring'])
-            ->name('monitoring.index');
+        Route::post('/geospasial/{id}/verify', [VerifikatorController::class, 'processVerification'])
+            ->name('geospasial.verify.process');
 
-    }); 
+        // Metadata
+        Route::get('/metadata', [VerifikatorController::class, 'metadata'])->name('metadata.index');
+
+        // Monitoring
+        Route::get('/monitoring', [VerifikatorController::class, 'monitoring'])->name('monitoring.index');
+    });
 
 
 /*
 |--------------------------------------------------------------------------
-| PRODUSEN DATA ROUTES
+| PRODUSEN ROUTES
 |--------------------------------------------------------------------------
 */
 
@@ -187,28 +141,25 @@ Route::prefix('produsen')
     ->name('produsen.')
     ->group(function () {
 
-        // ===============================
-        // DASHBOARD PRODUSEN
-        // ===============================
-        Route::get('/dashboard', [ProdusenController::class, 'dashboard'])
-            ->name('dashboard');
+        // Dashboard
+        Route::get('/dashboard', [ProdusenController::class, 'dashboard'])->name('dashboard');
 
-        // ===============================
-        // KELOLA DATA GEOSPASIAL
-        // ===============================
-        Route::get('/geospasial', [ProdusenController::class, 'geospasial'])
-            ->name('geospasial.index');
+        // Geospasial
+        Route::get('/geospasial', [ProdusenController::class, 'geospasial'])->name('geospasial.index');
 
-        // ===============================
-        // KELOLA METADATA
-        // ===============================
-        Route::get('/metadata', [ProdusenController::class, 'metadata'])
-            ->name('metadata.index');
+        Route::get('/geospasial/create', [ProdusenController::class, 'create'])->name('geospasial.create');
+        Route::post('/geospasial', [ProdusenController::class, 'store'])->name('geospasial.store');
 
-        // ===============================
-        // MONITORING STATUS
-        // ===============================
-        Route::get('/monitoring', [ProdusenController::class, 'monitoring'])
-            ->name('monitoring.index');
+        Route::get('/geospasial/{id}/edit', [ProdusenController::class, 'edit'])->name('geospasial.edit');
+        Route::put('/geospasial/{id}', [ProdusenController::class, 'update'])->name('geospasial.update');
 
+        Route::delete('/geospasial/{id}', [ProdusenController::class, 'destroy'])->name('geospasial.destroy');
+
+        // Metadata
+        Route::get('/metadata', [ProdusenController::class, 'metadata'])->name('metadata.index');
+        Route::post('/metadata', [ProdusenController::class, 'storeMetadata'])->name('metadata.store');
+        Route::put('/metadata/{id}', [ProdusenController::class, 'updateMetadata'])->name('metadata.update');
+
+        // Monitoring
+        Route::get('/monitoring', [ProdusenController::class, 'monitoring'])->name('monitoring.index');
     });

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>@yield('title', config('app.name', 'Geoportal Bengkulu'))</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -51,74 +51,28 @@
         @yield('content')
     </main>
 
-    <!-- ================= FOOTER ================= -->
-    <footer class="bg-gradient-to-br from-red-600 to-red-800 text-white py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-
-                <!-- About -->
-                <div class="space-y-4">
-                    <h3 class="text-xl font-bold mb-4">Geoportal Bengkulu</h3>
-                    <p class="text-red-100 text-sm leading-relaxed">
-                        Platform Informasi Geospasial Resmi Provinsi Bengkulu
-                        untuk mendukung perencanaan pembangunan dan transparansi data.
-                    </p>
-                </div>
-
-                <!-- Quick Links -->
-                <div class="space-y-3">
-                    <h3 class="text-lg font-bold mb-4">Tautan Cepat</h3>
-                    <a href="#" class="block text-red-100 hover:text-white transition text-sm">Beranda</a>
-                    <a href="#" class="block text-red-100 hover:text-white transition text-sm">Peta Interaktif</a>
-                    <a href="#" class="block text-red-100 hover:text-white transition text-sm">Data Geospasial</a>
-                    <a href="#" class="block text-red-100 hover:text-white transition text-sm">Tentang Kami</a>
-                    <a href="#" class="block text-red-100 hover:text-white transition text-sm">Kontak</a>
-                </div>
-
-                <!-- Contact -->
-                <div class="space-y-3">
-                    <h3 class="text-lg font-bold mb-4">Kontak Kami</h3>
-                    <div class="text-red-100 text-sm space-y-2">
-                        <p>Jl. Jend. Sudirman No. 35, Kota Bengkulu</p>
-                        <p>info@geoportal.bengkuluprov.go.id</p>
-                        <p>(0736) 123456</p>
-                    </div>
-                </div>
-
-                <!-- Newsletter -->
-                <div class="space-y-3">
-                    <h3 class="text-lg font-bold mb-4">Berlangganan Newsletter</h3>
-                    <p class="text-red-100 text-sm">
-                        Dapatkan update terbaru tentang data geospasial Bengkulu
-                    </p>
-                    <form class="space-y-2">
-                        <input type="email"
-                            placeholder="Email Anda"
-                            class="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20
-                                   focus:border-white focus:outline-none focus:ring-2 focus:ring-white/30
-                                   text-white placeholder-red-200 text-sm">
-
-                        <button type="submit"
-                            class="w-full px-4 py-2 bg-white text-red-600 font-bold rounded-lg
-                                   hover:bg-red-50 hover:scale-105 transition">
-                            Berlangganan
-                        </button>
-                    </form>
-                </div>
-
+    <!-- ================= FOOTER (Hanya Copyright) ================= -->
+    <footer class="bg-white border-t border-gray-100 py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <div class="flex flex-col items-center space-y-2">
+                <!-- Tambahan Logo Kecil di footer biar manis -->
+                <img src="{{ asset('Logo Provinsi Bengkulu.png') }}" class="h-8 mb-2 grayscale opacity-50" alt="Logo">
+                
+                <p class="text-gray-500 text-sm">
+                    &copy; {{ date('Y') }} <strong>Geoportal Provinsi Bengkulu</strong>. All rights reserved.
+                </p>
+                <p class="text-gray-400 text-[10px] uppercase tracking-widest">
+                    Pemerintah Provinsi Bengkulu
+                </p>
             </div>
-
-            <!-- Copyright -->
-            <div class="border-t border-white/20 mt-8 pt-8 text-center text-red-100 text-sm">
-                &copy; {{ date('Y') }} Geoportal Provinsi Bengkulu. All rights reserved.
-            </div>
-
         </div>
     </footer>
 
     <!-- AlpineJS -->
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <!-- Scripts Stack dari child view -->
+    @stack('scripts')
 
 </body>
 </html>

@@ -82,9 +82,9 @@
 
     <ul class="hidden md:flex items-center gap-8 text-white font-medium">
         @foreach($menuItems ?? [
-            ['label' => 'Peta Geospasial', 'url' => '/'],
-            ['label' => 'Katalog', 'url' => '/catalog'],
-            ['label' => 'Tentang Kami', 'url' => '/about']
+            ['label' => 'Peta Geospasial', 'url' => route('geo')],
+            ['label' => 'Katalog', 'url' => route('catalog')],
+            ['label' => 'Tentang Kami', 'url' => route('about')]
         ] as $item)
             <li>
                 <a href="{{ $item['url'] }}" class="hover:text-gray-200 transition">
