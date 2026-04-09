@@ -9,15 +9,44 @@ use App\Models\MetadataLayer;
 class VerifikatorController extends Controller
 {
     /**
-     * Menampilkan halaman Dashboard Verifikator
+     * Menampilkan halaman Dashboard Verifikator (sekaligus Monitoring Status)
      */
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        $totalPending  = GeospatialLayer::where('status_verifikasi', 'pending')->count();
-        $totalApproved = GeospatialLayer::where('status_verifikasi', 'approved')->count();
-        $totalRejected = GeospatialLayer::where('status_verifikasi', 'rejected')->count();
+        // Core stats
+        $totalPending   = GeospatialLayer::where('status_verifikasi', 'pending')->count();
+        $totalApproved  = GeospatialLayer::where('status_verifikasi', 'approved')->count();
+        $totalRejected  = GeospatialLayer::where('status_verifikasi', 'rejected')->count();
+        $totalPublished = GeospatialLayer::where('is_published', true)->count();
+        $totalAll       = GeospatialLayer::count();
 
-        return view('layouts.verifikator.dashboard', compact('totalPending', 'totalApproved', 'totalRejected'));
+        // Recent activity (latest 20 updated)
+        $recentActivity = GeospatialLayer::with(['category', 'metadata'])
+            ->latest('updated_at')
+            ->take(20)
+            ->get();
+
+        // Paginated table with filters
+        $query = GeospatialLayer::with(['category', 'metadata']);
+
+        if ($request->filled('status')) {
+            $query->where('status_verifikasi', $request->status);
+        }
+        if ($request->filled('search')) {
+            $query->where('layer_name', 'like', '%' . $request->search . '%');
+        }
+
+        $layers = $query->latest()->paginate(15)->withQueryString();
+
+        return view('layouts.verifikator.dashboard', compact(
+            'layers',
+            'totalPending',
+            'totalApproved',
+            'totalRejected',
+            'totalPublished',
+            'totalAll',
+            'recentActivity'
+        ));
     }
 
     /**
@@ -97,14 +126,6 @@ class VerifikatorController extends Controller
                          ->with('success', '✅ Status metadata berhasil diperbarui!');
     }
 
-    /**
-     * Menampilkan halaman Monitoring Status
-     */
-    public function monitoring()
-    {
-        $layers = GeospatialLayer::with(['category', 'metadata'])->latest()->paginate(10);
-        return view('layouts.verifikator.monitoringstatus', compact('layers'));
-    }
 
     // ==========================================
     // FUNGSI UNTUK MENERIMA AKSI SETUJU/TOLAK (LEGACY - akan dihapus)

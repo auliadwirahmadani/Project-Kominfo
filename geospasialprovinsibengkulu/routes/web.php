@@ -127,8 +127,6 @@ Route::prefix('verifikator')
         Route::post('/metadata/{id}/verify', [VerifikatorController::class, 'processMetadataVerification'])
             ->name('metadata.verify.process');
 
-        // Monitoring
-        Route::get('/monitoring', [VerifikatorController::class, 'monitoring'])->name('monitoring.index');
     });
 
 
@@ -162,6 +160,4 @@ Route::prefix('produsen')
         Route::post('/metadata', [ProdusenController::class, 'storeMetadata'])->name('metadata.store');
         Route::put('/metadata/{id}', [ProdusenController::class, 'updateMetadata'])->name('metadata.update');
 
-        // Monitoring
-        Route::get('/monitoring', [ProdusenController::class, 'monitoring'])->name('monitoring.index');
     });

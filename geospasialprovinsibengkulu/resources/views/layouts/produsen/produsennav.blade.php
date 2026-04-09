@@ -154,13 +154,6 @@
                     <span class="font-medium">Kelola Metadata</span>
                 </a>
 
-                <a href="{{ route('produsen.monitoring.index') }}"
-                   class="menu-item flex items-center gap-3 px-4 py-3 rounded-lg
-                   {{ Request::routeIs('produsen.monitoring*') ? 'menu-active bg-white/10 text-white' : 'hover:bg-white/10 text-red-200' }}">
-                    <i class="fas fa-chart-line w-5"></i>
-                    <span class="font-medium">Monitoring Status</span>
-                </a>
-
             </nav>
         </div>
 

@@ -285,7 +285,7 @@
 
     {{-- ===== FILTER BAR ===== --}}
     <form action="{{ route('catalog') }}" method="GET" id="filterForm">
-    <div class="flex flex-wrap items-center gap-3 mb-6 p-3 bg-white rounded-2xl shadow-sm border border-gray-100">
+    <div class="flex flex-wrap items-center gap-3 mb-6 p-3 bg-white rounded-2xl shadow-sm border border-gray-100" style="overflow: visible;">
 
         {{-- Search Input (Vanilla JS) --}}
         <div class="flex-1 min-w-[200px] relative" id="catalogSearchWrapper">
@@ -306,7 +306,7 @@
             {{-- Dropdown Panel --}}
             <div id="catalogSearchPanel"
                  class="absolute left-0 top-full mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden"
-                 style="display:none; z-index:200;">
+                 style="display:none; z-index:1000; min-width:280px;">
                 <div class="p-2.5 border-b border-gray-100 bg-gray-50">
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3">

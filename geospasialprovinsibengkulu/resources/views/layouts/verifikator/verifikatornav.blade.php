@@ -152,14 +152,6 @@
                     <i class="fas fa-file-contract w-5"></i>
                     <span class="font-medium">Periksa Metadata</span>
                 </a>
-
-                <a href="{{ route('verifikator.monitoring.index') }}"
-                   class="menu-item flex items-center gap-3 px-4 py-3 rounded-lg
-                   {{ Request::routeIs('verifikator.monitoring*') ? 'menu-active bg-white/10 text-white' : 'hover:bg-white/10 text-red-200' }}">
-                    <i class="fas fa-clipboard-list w-5"></i>
-                    <span class="font-medium">Monitoring Status</span>
-                </a>
-
             </nav>
         </div>
 
