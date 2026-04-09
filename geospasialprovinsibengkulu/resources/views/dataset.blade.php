@@ -62,6 +62,21 @@
     }
 </style>
 
+{{-- ==================== TOMBOL KEMBALI SILANG DARI MANAJEMEN ==================== --}}
+@if(request('from') == 'kelolametadata')
+<a href="{{ route('produsen.metadata.index') }}" 
+   class="fixed top-6 right-6 z-[9999] bg-[#8b0000] text-yellow-400 w-14 h-14 flex items-center justify-center rounded-full shadow-2xl hover:bg-[#6b0000] border-2 border-yellow-400 hover:scale-105 active:scale-95 transition-all"
+   title="Kembali ke Kelola Metadata">
+    <i class="fas fa-times text-2xl"></i>
+</a>
+@elseif(request('from') == 'adminreferensi')
+<a href="{{ route('admin.masterreferensi') }}" 
+   class="fixed top-6 right-6 z-[9999] bg-[#8b0000] text-yellow-400 w-14 h-14 flex items-center justify-center rounded-full shadow-2xl hover:bg-[#6b0000] border-2 border-yellow-400 hover:scale-105 active:scale-95 transition-all"
+   title="Kembali ke Master Referensi">
+    <i class="fas fa-times text-2xl"></i>
+</a>
+@endif
+
 {{-- ==================== HERO HEADER ==================== --}}
 <div class="bg-[#8b0000] pt-16 pb-8 px-4 relative overflow-hidden">
     <div class="absolute inset-0 opacity-5">

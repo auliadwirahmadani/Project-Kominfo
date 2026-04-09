@@ -805,12 +805,11 @@
                     loading="lazy"
                 >
                 
-                <!-- Floating Badges -->
                 <div class="floating-badge">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    120+ Layer Data
+                    {{ $totalLayers ?? 0 }} Layer Data
                 </div>
                 <div class="floating-badge">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -939,9 +938,9 @@
             
             <!-- Member 3 -->
             <div class="team-card animate-on-scroll">
-                <div class="team-avatar">AR</div>
-                <h4 class="team-name">Andi Rahman, S.T</h4>
-                <p class="team-role">Developer Platform</p>
+                <div class="team-avatar">AD</div>
+                <h4 class="team-name">Aulia Dwi Rahmadani</h4>
+                <p class="team-role">Fullstack Developer</p>
                 <p class="team-desc">
                     Full-stack developer yang fokus pada pengembangan aplikasi web 
                     geospasial yang cepat, aman, dan user-friendly.
@@ -983,26 +982,26 @@
             
             <div class="stat-card animate-on-scroll">
                 <div class="stat-icon">🗂️</div>
-                <span class="stat-value" data-target="120">0</span>
+                <span class="stat-value" data-target="{{ $totalLayers ?? 0 }}">0</span>
                 <span class="stat-label">Layer Data Aktif</span>
             </div>
             
             <div class="stat-card animate-on-scroll">
                 <div class="stat-icon">🏛️</div>
-                <span class="stat-value" data-target="25">0</span>
-                <span class="stat-label">Instansi Mitra</span>
+                <span class="stat-value" data-target="{{ $totalKategori ?? 0 }}">0</span>
+                <span class="stat-label">Kategori Data</span>
             </div>
             
             <div class="stat-card animate-on-scroll">
                 <div class="stat-icon">👥</div>
-                <span class="stat-value" data-target="15000">0</span>
+                <span class="stat-value" data-target="{{ $totalPengguna ?? 0 }}">0</span>
                 <span class="stat-label">Pengguna Terdaftar</span>
             </div>
             
             <div class="stat-card animate-on-scroll">
                 <div class="stat-icon">📥</div>
-                <span class="stat-value" data-target="50000">0</span>
-                <span class="stat-label">Unduhan Data</span>
+                <span class="stat-value" data-target="{{ $totalUnduhan ?? 0 }}">0</span>
+                <span class="stat-label">Total Akses/Unduhan</span>
             </div>
             
         </div>

@@ -238,12 +238,16 @@ class GeospatialController extends Controller
     public function showDetail($id)
     {
         // 1. Ambil data peta berdasarkan ID yang diklik
-        $dataset = GeospatialLayer::with(['metadata', 'category'])
-                    ->where('geospatial_id', $id)
-                    ->where('status_verifikasi', 'approved')
-                    ->firstOrFail();
+        $query = GeospatialLayer::with(['metadata', 'category'])->where('geospatial_id', $id);
+        
+        // 2. Jika bukan user login (tamu umum), wajib approved
+        if (!auth()->check()) {
+            $query->where('status_verifikasi', 'approved');
+        }
 
-        // 2. Kirim datanya ke halaman detail (dataset.blade.php)
+        $dataset = $query->firstOrFail();
+
+        // 3. Kirim datanya ke halaman detail (dataset.blade.php)
         return view('dataset', compact('dataset'));
     }
 

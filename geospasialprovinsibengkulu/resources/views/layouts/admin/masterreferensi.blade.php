@@ -59,7 +59,7 @@
 
             <div class="mt-auto space-y-2">
                 {{-- ✅ TOMBOL BARU: Lihat Detail Katalog Publik --}}
-               <a href="{{ route('dataset') }}" target="_blank"
+               <a href="{{ route('dataset.show', $layer->geospatial_id) }}?from=adminreferensi" 
                    class="w-full py-2.5 bg-red-50 text-red-700 border border-red-100 rounded-xl font-bold text-xs hover:bg-red-600 hover:border-red-600 hover:text-white transition-all flex items-center justify-center gap-2">
                     <i class="fas fa-external-link-alt"></i> Lihat Detail Dataset
                 </a>

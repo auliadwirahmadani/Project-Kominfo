@@ -29,8 +29,9 @@ class AuthController extends Controller
             
             $request->session()->regenerate();
 
-            // Ambil role dan normalisasi
-            $role = strtolower(trim(Auth::user()->role_name));
+            // Ambil role secara langsung dari relasi (paling aman menghindari isu kolom denormalisasi)
+            $userRole = Auth::user()->role;
+            $role = $userRole ? strtolower(trim($userRole->role_name)) : 'pengunjung';
 
             // 3. Redirect berdasarkan role
             switch ($role) {
@@ -38,6 +39,7 @@ class AuthController extends Controller
                     return redirect()->intended(route('admin.dashboard'));
                 
                 case 'produsen data':
+                case 'produsen': // Tambah fallback jika di database namanya "produsen" bukan "produsen data"
                     return redirect()->intended(route('produsen.dashboard'));
                 
                 case 'verifikator':

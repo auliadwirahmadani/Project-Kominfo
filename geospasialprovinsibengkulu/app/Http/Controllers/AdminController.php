@@ -191,7 +191,20 @@ class AdminController extends Controller
     // ===============================
     public function publikasi()
     {
-        // Menggunakan view layouts.admin.publikasi (sesuaikan jika nama foldernya berbeda)
-        return view('layouts.admin.publikasi'); 
+        // Mengambil semua data geospasial dengan relasi kategori dan metadata untuk dikelola status publikasinya
+        $layers = GeospatialLayer::with(['category', 'metadata'])->orderBy('updated_at', 'desc')->paginate(10);
+        return view('layouts.admin.publikasi', compact('layers'));
+    }
+
+    public function togglePublikasi(Request $request, $id)
+    {
+        $layer = GeospatialLayer::findOrFail($id);
+        
+        // Toggle is_published boolean
+        $layer->is_published = !$layer->is_published;
+        $layer->save();
+
+        $statusStr = $layer->is_published ? 'dipublikasikan' : 'ditarik dari publikasi';
+        return redirect()->back()->with('success', "Dataset berhasil {$statusStr}!");
     }
 }

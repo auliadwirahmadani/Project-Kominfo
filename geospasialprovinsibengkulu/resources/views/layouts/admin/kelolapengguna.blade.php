@@ -47,10 +47,9 @@
             class="w-full md:w-1/4 border px-4 py-2 rounded-lg shadow">
 
             <option value="">Semua Role</option>
-            <option value="admin">Admin</option>
-            <option value="pengunjung">Pengunjung</option>
-            <option value="produsen data">Produsen Data</option>
-            <option value="verifikator">Verifikator</option>
+            @foreach($roles as $r)
+                <option value="{{ $r->role_name }}">{{ ucwords($r->role_name) }}</option>
+            @endforeach
 
         </select>
 
@@ -191,10 +190,9 @@
                 required
                 class="w-full border px-3 py-2 rounded">
 
-            <option value="admin">Admin</option>
-            <option value="pengunjung">Pengunjung</option>
-            <option value="produsen data">Produsen Data</option>
-            <option value="verifikator">Verifikator</option>
+            @foreach($roles as $r)
+                <option value="{{ $r->role_name }}">{{ ucwords($r->role_name) }}</option>
+            @endforeach
 
         </select>
     </div>

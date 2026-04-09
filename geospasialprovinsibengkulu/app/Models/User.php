@@ -57,11 +57,7 @@ class User extends Authenticatable
      */
     public function getRoleNameAttribute()
     {
-        // Jika role_name sudah ada di DB, pakai itu (lebih cepat)
-        if ($this->attributes['role_name']) {
-            return $this->attributes['role_name'];
-        }
-        // Jika NULL, ambil dari relasi (fallback)
+        // Selalu ambil dari relasi tabel roles untuk memastikan akurasi (menghindari kerancuan data denormalisasi)
         return $this->role ? $this->role->role_name : 'Pengunjung';
     }
 }

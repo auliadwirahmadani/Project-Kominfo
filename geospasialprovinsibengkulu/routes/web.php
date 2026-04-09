@@ -19,7 +19,24 @@ use App\Http\Controllers\ProdusenController;
 Route::get('/', [MapController::class, 'index'])->name('geo');
 
 // About Page
-Route::get('/about', fn() => view('about'))->name('about');
+Route::get('/about', function () {
+    $totalLayers = \App\Models\GeospatialLayer::where('is_published', 1)->where('status_verifikasi', 'approved')->count();
+    $totalKategori = \App\Models\Category::count();
+    $totalPengguna = \App\Models\User::count();
+    $totalUnduhan = 5421; // Dummy data representatif karena belum ada tabel log unduhan
+
+    return view('about', compact('totalLayers', 'totalKategori', 'totalPengguna', 'totalUnduhan'));
+})->name('about');
+
+Route::get('/debug-role', function() {
+    $user = \App\Models\User::where('email', 'produsendiskominfotik@gmail.com')->first();
+    if (!$user) return 'User not found';
+    return response()->json([
+        'user' => $user->toArray(),
+        'role' => $user->role ? $user->role->toArray() : null,
+        'role_relation_id' => $user->role_id,
+    ]);
+});
 
 // ✅ 1. Katalog Data Publik (Halaman Grid/Kotak-kotak)
 Route::get('/catalog', [GeospatialController::class, 'katalogDataset'])->name('catalog');
@@ -71,10 +88,6 @@ Route::prefix('admin')
         // Resource Geospasial
         Route::resource('geospasial', GeospatialController::class);
 
-        // Custom Edit (GeoEdit)
-        Route::get('/geoedit/{id}', [GeospatialController::class, 'edit'])->name('geoedit');
-        Route::put('/geoedit/{id}', [GeospatialController::class, 'update'])->name('geoedit.update');
-
         // Preview & Download
         Route::get('/geospasial/{id}/geojson', [GeospatialController::class, 'getGeoJson'])
             ->name('geospatial.geojson');
@@ -96,6 +109,7 @@ Route::prefix('admin')
 
         // Publikasi
         Route::get('/publikasi', [AdminController::class, 'publikasi'])->name('publikasi');
+        Route::post('/publikasi/toggle/{id}', [AdminController::class, 'togglePublikasi'])->name('publikasi.toggle');
     });
 
 

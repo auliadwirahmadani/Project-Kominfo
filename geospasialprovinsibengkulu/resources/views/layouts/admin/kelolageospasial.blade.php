@@ -79,12 +79,26 @@
                         </button>
                         @endif
                 
-                        {{-- ✅ Tombol Edit --}}
-                        <a href="{{ route('admin.geoedit', $layer->geospatial_id) }}" 
+                        {{-- ✅ Tombol Edit (Popup) --}}
+                        @php
+                            $editData = [
+                                'id' => $layer->geospatial_id,
+                                'layer_name' => $layer->layer_name,
+                                'category_id' => $layer->category_id,
+                                'description' => $layer->description,
+                                'status_verifikasi' => $layer->status_verifikasi,
+                                'is_published' => $layer->is_published,
+                                'filename' => $layer->file_original_name ?? basename($layer->file_path),
+                                'file_size' => $layer->file_size,
+                                'file_type' => $layer->file_type
+                            ];
+                        @endphp
+                        <button type="button" 
+                           onclick='openEditModal(@json($editData))' 
                            class="text-blue-600 hover:text-blue-800 p-1" 
                            title="Edit">
                             <i class="fas fa-edit"></i>
-                        </a>
+                        </button>
 
                         {{-- ✅ Tombol Hapus --}}
                         <form action="{{ route('admin.geospasial.destroy', $layer->geospatial_id) }}" 
@@ -216,14 +230,7 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-gray-700 font-semibold mb-2">Status Verifikasi</label>
-                    <select name="status_verifikasi" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
-                        <option value="pending" {{ old('status_verifikasi') == 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="draft" {{ old('status_verifikasi') == 'draft' ? 'selected' : '' }}>Draft</option>
-                        <option value="approved" {{ old('status_verifikasi') == 'approved' ? 'selected' : '' }}>Approved</option>
-                        <option value="rejected" {{ old('status_verifikasi') == 'rejected' ? 'selected' : '' }}>Rejected</option>
-                    </select>
+                    <input type="hidden" name="status_verifikasi" value="pending">
                 </div>
 
                 <div class="mb-6">
@@ -255,6 +262,107 @@
                     <button type="submit" id="submitBtn"
                             class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-save mr-2"></i>Simpan Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- ==================== MODAL EDIT DATA ==================== --}}
+<div id="editDataModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-6 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800">Edit Data Geospasial</h2>
+            <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="p-6">
+            <form action="" method="POST" enctype="multipart/form-data" id="geoEditForm">
+                @csrf
+                @method('PUT')
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Nama Layer *</label>
+                    <input type="text" name="layer_name" id="edit_layer_name"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                           required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Kategori *</label>
+                    <select name="category_id" id="edit_category_id"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">Pilih Kategori</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->category_id }}">{{ $category->category_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">File Peta (.geojson/.json/.zip)</label>
+                    
+                    {{-- Info File Saat Ini --}}
+                    <div id="currentFileInfo" class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                        <p class="text-sm text-blue-800">
+                            <strong>📁 File saat ini:</strong><br>
+                            <span id="currentFileName"></span><br>
+                            <small class="text-gray-600">Terlampir dan tidak akan berubah jika Anda tidak mengunggah file baru.</small>
+                        </p>
+                    </div>
+
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+                        <input type="file" name="geospatial_file" id="edit_geospatial_file" 
+                               accept=".geojson,.json,.shp,.zip" 
+                               class="hidden" onchange="handleEditFileSelect(event)">
+                        <label for="edit_geospatial_file" class="cursor-pointer">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                            <p class="text-gray-600 font-medium">Klik untuk upload file pengganti</p>
+                            <p class="text-xs text-gray-400 mt-2">* Kosongkan jika tidak ingin mengubah file</p>
+                        </label>
+                    </div>
+                    <div id="editFileInfo" class="hidden mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-file text-green-600"></i>
+                                <span id="editFileNameDisplay" class="text-sm font-medium text-gray-700"></span>
+                            </div>
+                            <button type="button" onclick="removeEditFile()" class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Deskripsi</label>
+                    <textarea name="description" id="edit_description" rows="3" 
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <input type="hidden" name="status_verifikasi" id="edit_status_verifikasi" value="pending">
+                </div>
+
+                <div class="mb-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_published" id="edit_is_published" value="1" 
+                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-2 text-gray-700">Publikasi Data</span>
+                    </label>
+                </div>
+
+                <div class="flex gap-3 justify-end border-t border-gray-100 pt-4">
+                    <button type="button" onclick="closeEditModal()"
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg font-semibold">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                        <i class="fas fa-save mr-2"></i>Simpan Perubahan
                     </button>
                 </div>
             </form>
@@ -391,6 +499,67 @@
         document.getElementById('geospatialForm')?.reset();
         removeFile();
     }
+
+    // ==================== FUNGSI MODAL EDIT DATA ====================
+    function openEditModal(data) {
+        document.getElementById('editDataModal').classList.remove('hidden');
+        document.getElementById('editDataModal').classList.add('flex');
+        document.body.style.overflow = 'hidden';
+
+        // Populate Form
+        document.getElementById('geoEditForm').action = "/admin/geospasial/" + data.id;
+        document.getElementById('edit_layer_name').value = data.layer_name || '';
+        document.getElementById('edit_category_id').value = data.category_id || '';
+        document.getElementById('edit_description').value = data.description || '';
+        document.getElementById('edit_status_verifikasi').value = data.status_verifikasi || 'pending';
+        document.getElementById('edit_is_published').checked = !!data.is_published;
+
+        // Populate File Info
+        if (data.filename) {
+            document.getElementById('currentFileInfo').classList.remove('hidden');
+            let sizeInfo = data.file_size ? `${(data.file_size / 1024).toFixed(2)} KB` : '';
+            if (sizeInfo) sizeInfo = ` | ${sizeInfo}`;
+            document.getElementById('currentFileName').textContent = `${data.filename} (${(data.file_type || '').toUpperCase()}${sizeInfo})`;
+        } else {
+            document.getElementById('currentFileInfo').classList.add('hidden');
+        }
+        
+        removeEditFile();
+    }
+
+    function closeEditModal() {
+        document.getElementById('editDataModal').classList.add('hidden');
+        document.getElementById('editDataModal').classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }
+
+    function handleEditFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            document.getElementById('editFileNameDisplay').textContent = file.name;
+            document.getElementById('editFileInfo').classList.remove('hidden');
+        }
+    }
+
+    function removeEditFile() {
+        if(document.getElementById('edit_geospatial_file')) {
+            document.getElementById('edit_geospatial_file').value = '';
+        }
+        document.getElementById('editFileInfo')?.classList.add('hidden');
+    }
+
+    // Tutup Edit modal saat escape atau click luar area
+    document.getElementById('editDataModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeEditModal();
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (!document.getElementById('addDataModal').classList.contains('hidden')) closeModal();
+            if (!document.getElementById('editDataModal').classList.contains('hidden')) closeEditModal();
+            if (!document.getElementById('mapModal').classList.contains('hidden')) closeMapModal();
+        }
+    });
 
     function formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
