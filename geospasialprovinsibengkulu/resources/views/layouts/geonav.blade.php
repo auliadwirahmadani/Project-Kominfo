@@ -302,26 +302,15 @@
                     Tentang Kami
                 </a>
                 <div class="h-px bg-gray-100 my-1"></div>
-                @guest
                 <a href="{{ route('login') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
                     Masuk / Login
                 </a>
-                @else
-                <div class="px-4 py-2.5 text-sm text-gray-500 font-medium truncate">{{ Auth::user()->name }}</div>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="w-full text-left flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                        Keluar
-                    </button>
-                </form>
-                @endguest
             </div>
         </div>
         @endif
 
-        {{-- User Section --}}
+        {{-- Tombol Login — hanya tampil jika belum login (pengunjung) --}}
         @guest
             <a href="{{ route('login') }}"
                class="flex items-center gap-1.5 bg-white text-red-700 px-4 py-1.5 rounded-full font-semibold text-sm hover:bg-red-50 transition shadow-sm">
@@ -330,71 +319,6 @@
                 </svg>
                 Masuk
             </a>
-        @else
-            <div class="relative" x-data="{ userOpen: false }">
-                <button @click="userOpen = !userOpen" type="button"
-                        class="flex items-center gap-2 text-white hover:text-red-200 transition py-1.5 px-2 rounded-lg hover:bg-red-900/40">
-                    <div class="w-7 h-7 rounded-full bg-red-900 border border-red-400 flex items-center justify-center text-xs font-bold shrink-0">
-                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                    </div>
-                    <span class="text-sm font-medium hidden sm:block max-w-[100px] truncate">{{ Auth::user()->name }}</span>
-                    <svg class="w-3.5 h-3.5 text-red-300 transition-transform" :class="{'rotate-180': userOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </button>
-
-                <div x-show="userOpen" @click.outside="userOpen = false"
-                     x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 scale-95"
-                     x-transition:enter-end="opacity-100 scale-100"
-                     x-transition:leave="transition ease-in duration-150"
-                     x-transition:leave-start="opacity-100 scale-100"
-                     x-transition:leave-end="opacity-0 scale-95"
-                     class="absolute right-0 top-full mt-3 w-52 bg-white rounded-xl shadow-2xl py-2 z-[1050] border border-gray-100"
-                     style="display: none;">
-
-                    <div class="px-4 py-2.5 border-b border-gray-100">
-                        <p class="text-sm font-bold text-gray-800 truncate">{{ Auth::user()->name }}</p>
-                        <p class="text-xs text-gray-500 truncate">{{ Auth::user()->email }}</p>
-                        @if(Auth::user()->role_name)
-                        <span class="inline-block mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-red-100 text-red-700 rounded-full">
-                            {{ Auth::user()->role_name }}
-                        </span>
-                        @endif
-                    </div>
-
-                    @php $role = strtolower(Auth::user()->role_name ?? ''); @endphp
-                    @if(str_contains($role, 'admin'))
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                        Dashboard Admin
-                    </a>
-                    @elseif(str_contains($role, 'verifikator'))
-                    <a href="{{ route('verifikator.dashboard') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Dashboard Verifikator
-                    </a>
-                    @elseif(str_contains($role, 'produsen'))
-                    <a href="{{ route('produsen.dashboard') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        Dashboard Produsen
-                    </a>
-                    @endif
-
-                    <div class="h-px bg-gray-100 my-1"></div>
-
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit"
-                                class="w-full text-left flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition font-medium">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                            </svg>
-                            Keluar
-                        </button>
-                    </form>
-                </div>
-            </div>
         @endguest
 
     </div>

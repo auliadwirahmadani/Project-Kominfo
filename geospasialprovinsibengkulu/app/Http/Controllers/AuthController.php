@@ -10,6 +10,18 @@ class AuthController extends Controller
     // Tampilkan form login
     public function index()
     {
+        // Jika sudah login, redirect ke dashboard sesuai role
+        if (Auth::check()) {
+            $role = strtolower(Auth::user()->role_name ?? '');
+            if (str_contains($role, 'admin')) {
+                return redirect()->route('admin.dashboard');
+            } elseif (str_contains($role, 'produsen')) {
+                return redirect()->route('produsen.dashboard');
+            } elseif (str_contains($role, 'verifikator')) {
+                return redirect()->route('verifikator.dashboard');
+            }
+        }
+
         return view('login');
     }
 

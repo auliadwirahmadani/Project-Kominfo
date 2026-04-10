@@ -4,14 +4,29 @@ namespace App\Http\Controllers;
 
 use App\Models\GeospatialLayer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MapController extends Controller
 {
     /**
-     * Memuat halaman awal (geo.blade.php) beserta data layer awal
+     * Memuat halaman awal (geo.blade.php) beserta data layer awal.
+     * Jika user sudah login sebagai admin/produsen/verifikator,
+     * redirect langsung ke dashboard masing-masing.
      */
     public function index()
     {
+        // Redirect user yang sudah login ke dashboard masing-masing
+        if (Auth::check()) {
+            $role = strtolower(Auth::user()->role_name ?? '');
+            if (str_contains($role, 'admin')) {
+                return redirect()->route('admin.dashboard');
+            } elseif (str_contains($role, 'produsen')) {
+                return redirect()->route('produsen.dashboard');
+            } elseif (str_contains($role, 'verifikator')) {
+                return redirect()->route('verifikator.dashboard');
+            }
+        }
+
         // ✅ Load data beserta relasi metadatanya
         $layers = GeospatialLayer::with('metadata')
                     ->where('status_verifikasi', 'approved')
