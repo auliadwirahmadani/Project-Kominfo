@@ -8,6 +8,7 @@ use App\Http\Controllers\MapController;
 use App\Http\Controllers\MetadataController;
 use App\Http\Controllers\VerifikatorController;
 use App\Http\Controllers\ProdusenController;
+use App\Http\Controllers\PasswordResetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,6 +64,12 @@ Route::get('/geospatial/filter', [GeospatialController::class, 'filterData'])
 Route::get('/login', [AuthController::class, 'index'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.process');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Lupa Kata Sandi
+Route::get('/lupa-kata-sandi', [PasswordResetController::class, 'showForgotForm'])->name('password.forgot');
+Route::post('/lupa-kata-sandi', [PasswordResetController::class, 'sendResetLink'])->name('password.forgot.send');
+Route::get('/reset-kata-sandi', [PasswordResetController::class, 'showResetForm'])->name('password.reset.form');
+Route::post('/reset-kata-sandi', [PasswordResetController::class, 'resetPassword'])->name('password.reset.process');
 
 
 /*
