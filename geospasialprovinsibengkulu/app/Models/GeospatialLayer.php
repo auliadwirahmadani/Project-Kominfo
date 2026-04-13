@@ -16,14 +16,14 @@ class GeospatialLayer extends Model
     
     // Disesuaikan persis dengan kolom yang ada di database DBeaver
     protected $fillable = [
+        'user_id',
         'layer_name',
         'description',
         'category_id',
         'file_path',
         'status_verifikasi',
+        'catatan_verifikator',
         'is_published',
-        // 'user_id', // Buka komentar (hapus //) jika kolom ini ternyata sudah mas tambahkan di database
-        // 'geometry', // Buka komentar jika kolom ini ada di database
     ];
 
     protected $casts = [
@@ -39,10 +39,10 @@ class GeospatialLayer extends Model
         return $this->belongsTo(Category::class, 'category_id', 'category_id'); 
     }
     
-    // Relasi ke User (Hanya akan berfungsi jika ada kolom user_id di tabel geospatial_layer)
+    // Relasi ke User
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
     }
 
     // Relasi ke MetadataLayer

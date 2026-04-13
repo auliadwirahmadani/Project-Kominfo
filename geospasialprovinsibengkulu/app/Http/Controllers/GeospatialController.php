@@ -213,7 +213,12 @@ class GeospatialController extends Controller
         $totalPeta       = GeospatialLayer::where('is_published', 1)->where('status_verifikasi', 'approved')->count();
         $totalKategori   = Category::count();
         $totalPengguna   = \App\Models\User::count() ?? 1;
-        $totalInstansi   = 5;
+
+        // Ambil semua produsen data
+        $producens = \App\Models\User::with('profile')
+            ->whereHas('role', fn($q) => $q->where('role_name', 'produsen'))
+            ->get();
+        $totalInstansi   = $producens->count();
         $categories      = Category::orderBy('category_name')->get();
 
         // Data untuk Alpine.js search dropdown (semua layer publik)
@@ -230,7 +235,8 @@ class GeospatialController extends Controller
             'totalInstansi',
             'totalPengguna',
             'categories',
-            'layersForSearch'
+            'layersForSearch',
+            'producens'
         ));
     }
 
@@ -249,6 +255,21 @@ class GeospatialController extends Controller
 
         // 3. Kirim datanya ke halaman detail (dataset.blade.php)
         return view('dataset', compact('dataset'));
+    }
+
+    // Menampilkan HALAMAN DETAIL INSTANSI (Peta per OPD) -> view instansi_detail.blade.php
+    public function showInstansi($id)
+    {
+        $instansi = \App\Models\User::with('profile')->where('user_id', $id)->firstOrFail();
+        
+        $datasets = GeospatialLayer::with(['metadata', 'category'])
+                        ->where('user_id', $id)
+                        ->where('is_published', 1)
+                        ->where('status_verifikasi', 'approved')
+                        ->latest()
+                        ->paginate(9);
+
+        return view('instansi_detail', compact('instansi', 'datasets'));
     }
 
     // API Filter AJAX untuk peta (route: geospatial.filter)

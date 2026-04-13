@@ -11,6 +11,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $table = 'users';
+    protected $primaryKey = 'user_id';
 
     /**
      * Mass Assignable
@@ -21,8 +22,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
-        'role_name', 
-        'status'
+        'role_name',
+        'status',
     ];
 
     /**
@@ -38,7 +39,9 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'created_at'        => 'datetime',
+        'updated_at'        => 'datetime',
+        // 'password' => 'hashed', // Dihapus: konflik dengan Auth::attempt() - password di-hash manual via Hash::make()
     ];
 
     /**
@@ -49,6 +52,19 @@ class User extends Authenticatable
     {
         // Syntax: belongsTo(Model, foreign_key_di_users, primary_key_di_roles)
         return $this->belongsTo(Role::class, 'role_id', 'role_id');
+    }
+
+    public function geospatialLayers()
+    {
+        return $this->hasMany(GeospatialLayer::class, 'user_id', 'user_id');
+    }
+
+    /**
+     * 🔥 Relasi ke tabel profiles
+     */
+    public function profile()
+    {
+        return $this->hasOne(Profile::class, 'user_id', 'user_id');
     }
 
     /**

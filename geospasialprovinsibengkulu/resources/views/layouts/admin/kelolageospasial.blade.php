@@ -13,109 +13,135 @@
 </div>
 
 @if($layers->count() > 0)
-<div class="overflow-x-auto">
-    <table class="w-full">
-        <thead class="bg-gray-50 border-b border-gray-200">
-            <tr>
-                <th class="p-3 text-left font-semibold text-gray-700">No</th>
-                <th class="p-3 text-left font-semibold text-gray-700">Nama Layer</th>
-                <th class="p-3 text-left font-semibold text-gray-700">Kategori</th>
-                <th class="p-3 text-left font-semibold text-gray-700">Deskripsi</th>
-                <th class="p-3 text-left font-semibold text-gray-700">Status Verifikasi</th>
-                <th class="p-3 text-left font-semibold text-gray-700">Status Publikasi</th>
-                <th class="p-3 text-left font-semibold text-gray-700">Tanggal Dibuat</th>
-                <th class="p-3 text-left font-semibold text-gray-700">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($layers as $index => $layer)
-            <tr class="hover:bg-red-50 border-b border-gray-100">
-                <td class="p-3">{{ $layers->firstItem() + $index }}</td>
-                <td class="p-3 font-semibold text-gray-800">{{ $layer->layer_name }}</td>
-                <td class="p-3">
-                    @if($layer->category)
-                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
-                            {{ $layer->category->category_name ?? 'N/A' }}
-                        </span>
-                    @else
-                        <span class="text-gray-400">-</span>
-                    @endif
-                </td>
-                <td class="p-3 text-gray-600 max-w-xs truncate" title="{{ $layer->description }}">
-                    {{ Str::limit($layer->description, 50) ?? '-' }}
-                </td>
-                <td class="p-3">
+
+{{-- CARD GRID VIEW --}}
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+    @foreach($layers as $index => $layer)
+    <div class="geo-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col">
+
+        {{-- ===== MINI MAP PREVIEW ===== --}}
+        @php
+            $hasFile = $layer->file_path || $layer->geojson_data;
+        @endphp
+        <div class="relative h-44 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+
+            @if($hasFile)
+                {{-- Placeholder map div — Leaflet akan diinit via JS IntersectionObserver --}}
+                <div class="card-mini-map w-full h-full"
+                     data-layer-id="{{ $layer->geospatial_id }}"
+                     data-layer-name="{{ addslashes($layer->layer_name) }}"
+                     style="z-index:1">
+                </div>
+                {{-- Skeleton loader --}}
+                <div class="mini-map-loader absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-10 transition-opacity duration-500">
+                    <i class="fas fa-spinner fa-spin text-red-400 text-2xl mb-2"></i>
+                    <span class="text-xs text-gray-400">Memuat peta...</span>
+                </div>
+            @else
+                <div class="flex flex-col items-center justify-center h-full text-gray-400">
+                    <i class="fas fa-map text-4xl mb-2 opacity-30"></i>
+                    <span class="text-xs">Belum ada file peta</span>
+                </div>
+            @endif
+
+            {{-- Published Badge overlaid --}}
+            <div class="absolute top-3 right-3 z-20">
+                @if($layer->is_published)
+                    <span class="px-2.5 py-1 bg-green-500 text-white text-[10px] font-bold rounded-full shadow-md uppercase tracking-wide">
+                        <i class="fas fa-globe mr-1"></i>Publik
+                    </span>
+                @else
+                    <span class="px-2.5 py-1 bg-gray-700/70 text-white text-[10px] font-bold rounded-full backdrop-blur-sm uppercase tracking-wide">Draft</span>
+                @endif
+            </div>
+
+            {{-- Full Preview Button (hover) --}}
+            @if($hasFile)
+            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center z-20 opacity-0 group-hover:opacity-100">
+                <button onclick="viewMap({{ $layer->geospatial_id }}, '{{ addslashes($layer->layer_name) }}')"
+                        class="bg-white text-gray-800 px-4 py-2 rounded-full text-sm font-semibold shadow-lg hover:bg-red-600 hover:text-white transition-all flex items-center gap-2">
+                    <i class="fas fa-expand-alt"></i> Buka Peta
+                </button>
+            </div>
+            @endif
+        </div>
+
+        {{-- ===== CARD BODY ===== --}}
+        <div class="p-5 flex flex-col flex-1">
+            <div class="flex items-start justify-between gap-2 mb-3">
+                <h3 class="font-bold text-gray-800 text-base leading-snug line-clamp-2">{{ $layer->layer_name }}</h3>
+                <div class="shrink-0">
                     @php
                         $statusColors = [
-                            'pending' => 'bg-yellow-100 text-yellow-700',
+                            'pending'  => 'bg-yellow-100 text-yellow-700',
                             'approved' => 'bg-green-100 text-green-700',
                             'rejected' => 'bg-red-100 text-red-700',
-                            'draft' => 'bg-gray-100 text-gray-700'
+                            'draft'    => 'bg-gray-100 text-gray-600'
                         ];
-                        $statusClass = $statusColors[$layer->status_verifikasi] ?? 'bg-gray-100 text-gray-700';
+                        $statusClass = $statusColors[$layer->status_verifikasi] ?? 'bg-gray-100 text-gray-600';
                     @endphp
-                    <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $statusClass }}">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $statusClass }} uppercase tracking-wide">
                         {{ ucfirst($layer->status_verifikasi ?? 'draft') }}
                     </span>
-                </td>
-                <td class="p-3">
-                    <span class="px-2 py-1 rounded-full text-xs font-semibold
-                        {{ $layer->is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700' }}">
-                        {{ $layer->is_published ? 'Published' : 'Draft' }}
-                    </span>
-                </td>
-                <td class="p-3 text-gray-600 text-sm">
-                    {{ $layer->created_at ? $layer->created_at->format('d M Y') : '-' }}
-                </td>
-                <td class="p-3">
-                    <div class="flex gap-2">
-                        {{-- ✅ Tombol Lihat Peta --}}
-                        @if($layer->file_path || $layer->geojson_data)
-                        <button type="button" 
-                                onclick="viewMap({{ $layer->geospatial_id }}, '{{ addslashes($layer->layer_name) }}')" 
-                                class="text-green-600 hover:text-green-800 p-1" 
-                                title="Lihat Peta">
-                            <i class="fas fa-map"></i>
-                        </button>
-                        @endif
-                
-                        {{-- ✅ Tombol Edit (Popup) --}}
-                        @php
-                            $editData = [
-                                'id' => $layer->geospatial_id,
-                                'layer_name' => $layer->layer_name,
-                                'category_id' => $layer->category_id,
-                                'description' => $layer->description,
-                                'status_verifikasi' => $layer->status_verifikasi,
-                                'is_published' => $layer->is_published,
-                                'filename' => $layer->file_original_name ?? basename($layer->file_path),
-                                'file_size' => $layer->file_size,
-                                'file_type' => $layer->file_type
-                            ];
-                        @endphp
-                        <button type="button" 
-                           onclick='openEditModal(@json($editData))' 
-                           class="text-blue-600 hover:text-blue-800 p-1" 
-                           title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
+                </div>
+            </div>
 
-                        {{-- ✅ Tombol Hapus --}}
-                        <form action="{{ route('admin.geospasial.destroy', $layer->geospatial_id) }}" 
-                              method="POST" 
-                              onsubmit="return confirm('Yakin ingin menghapus data ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+            <div class="flex items-center gap-2 mb-3">
+                @if($layer->category)
+                    <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-[11px] font-semibold">
+                        <i class="fas fa-folder mr-1"></i>{{ $layer->category->category_name }}
+                    </span>
+                @endif
+                <span class="text-xs text-gray-400 ml-auto">
+                    {{ $layer->created_at ? $layer->created_at->format('d M Y') : '-' }}
+                </span>
+            </div>
+
+            @if($layer->description)
+                <p class="text-xs text-gray-500 line-clamp-2 mb-4">{{ $layer->description }}</p>
+            @endif
+
+            {{-- Action Buttons --}}
+            <div class="mt-auto pt-3 border-t border-gray-100 flex items-center gap-2">
+                @if($hasFile)
+                <button onclick="viewMap({{ $layer->geospatial_id }}, '{{ addslashes($layer->layer_name) }}')"
+                        class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-green-700 bg-green-50 rounded-lg hover:bg-green-600 hover:text-white transition-all">
+                    <i class="fas fa-map"></i> Peta
+                </button>
+                @endif
+
+                @php
+                    $editData = [
+                        'id'               => $layer->geospatial_id,
+                        'layer_name'       => $layer->layer_name,
+                        'category_id'      => $layer->category_id,
+                        'description'      => $layer->description,
+                        'status_verifikasi'=> $layer->status_verifikasi,
+                        'is_published'     => $layer->is_published,
+                        'filename'         => $layer->file_original_name ?? basename($layer->file_path),
+                        'file_size'        => $layer->file_size,
+                        'file_type'        => $layer->file_type,
+                    ];
+                @endphp
+                <button onclick='openEditModal(@json($editData))'
+                        class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+
+                <form action="{{ route('admin.geospasial.destroy', $layer->geospatial_id) }}"
+                      method="POST"
+                      onsubmit="return confirm('Hapus dataset \'{{ addslashes($layer->layer_name) }}\'? Tindakan ini tidak dapat dibatalkan.')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            class="flex items-center justify-center gap-1 px-3 py-2 text-sm font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-600 hover:text-white transition-all">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endforeach
 </div>
 
 {{-- Pagination --}}
@@ -127,7 +153,7 @@
 <div class="text-center py-12">
     <i class="fas fa-map-marked-alt text-6xl text-gray-300 mb-4"></i>
     <p class="text-gray-500 text-lg">Belum ada data geospasial</p>
-    <button onclick="openModal()" 
+    <button onclick="openModal()"
        class="inline-block mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold cursor-pointer">
         <i class="fas fa-plus mr-2"></i>Tambah Data Pertama
     </button>
@@ -418,8 +444,9 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <style>
+    /* Full modal map */
     #mapViewer { min-height: 500px; border-radius: 0.5rem; }
     .leaflet-container { width: 100%; height: 100%; border-radius: 0.5rem; }
     .leaflet-popup-content-wrapper { border-radius: 0.5rem; }
@@ -428,6 +455,17 @@
     .leaflet-popup-content li { padding: 2px 0; border-bottom: 1px solid #eee; }
     .leaflet-popup-content li:last-child { border-bottom: none; }
     .leaflet-popup-content strong { color: #374151; }
+
+    /* Card mini map */
+    .card-mini-map { position: relative; }
+    .card-mini-map .leaflet-container {
+        border-radius: 0 !important;
+    }
+    .card-mini-map .leaflet-control-zoom,
+    .card-mini-map .leaflet-control-attribution { display: none !important; }
+    .card-mini-map .leaflet-interactive { cursor: default !important; }
+    /* Two-line clamp */
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 </style>
 @endpush
 
@@ -796,5 +834,95 @@
 
         xhr.send(formData);
     });
+
+    // ==================== MINI MAP PREVIEW CARDS (IntersectionObserver) ====================
+    const _miniMaps = {}; // track map instances per card
+
+    function initMiniMap(cardEl) {
+        const layerId   = cardEl.dataset.layerId;
+        const layerName = cardEl.dataset.layerName;
+        if (_miniMaps[layerId]) return; // already loaded
+
+        // Mark as loading
+        _miniMaps[layerId] = 'loading';
+
+        const miniMap = L.map(cardEl, {
+            zoomControl: false,
+            attributionControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            touchZoom: false,
+            keyboard: false,
+            center: [-3.8, 102.3],
+            zoom: 8
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        }).addTo(miniMap);
+
+        // Fetch & draw
+        fetch(`/admin/geospasial/${layerId}/geojson`)
+            .then(r => r.ok ? r.json() : Promise.reject(r))
+            .then(data => {
+                let geoData = data;
+                if (data.is_shapefile) return; // skip shapefile in mini preview
+                if (!geoData || !geoData.type) return;
+
+                // Fix geometry
+                function fixGeom(g) {
+                    if (!g || !g.coordinates) return null;
+                    if (!g.type) {
+                        let c = g.coordinates;
+                        if (Array.isArray(c[0]) && Array.isArray(c[0][0]) && Array.isArray(c[0][0][0])) g.type = 'MultiPolygon';
+                        else if (Array.isArray(c[0]) && Array.isArray(c[0][0])) g.type = 'Polygon';
+                        else if (Array.isArray(c[0])) g.type = 'LineString';
+                        else g.type = 'Point';
+                    }
+                    return g;
+                }
+                let features = [];
+                if (geoData.type === 'FeatureCollection') {
+                    geoData.features.forEach(f => { f.geometry = fixGeom(f.geometry); if(f.geometry) features.push(f); });
+                } else if (geoData.type === 'Feature') {
+                    geoData.geometry = fixGeom(geoData.geometry); if(geoData.geometry) features.push(geoData);
+                }
+
+                if (features.length === 0) return;
+
+                const gl = L.geoJSON({ type: 'FeatureCollection', features }, {
+                    style: { color: '#dc2626', weight: 2, fillColor: '#fca5a5', fillOpacity: 0.5 }
+                }).addTo(miniMap);
+
+                if (gl.getBounds().isValid()) {
+                    miniMap.fitBounds(gl.getBounds(), { padding: [10, 10], maxZoom: 14 });
+                }
+
+                // Hide skeleton loader
+                const loader = cardEl.closest('.geo-card')?.querySelector('.mini-map-loader');
+                if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 500); }
+
+                _miniMaps[layerId] = miniMap;
+            })
+            .catch(() => {
+                // Hide loader on error silently
+                const loader = cardEl.closest('.geo-card')?.querySelector('.mini-map-loader');
+                if (loader) loader.remove();
+            });
+    }
+
+    // Use IntersectionObserver so maps load when card enters viewport
+    const mapObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                initMiniMap(entry.target);
+                mapObserver.unobserve(entry.target);
+            }
+        });
+    }, { rootMargin: '100px' });
+
+    document.querySelectorAll('.card-mini-map').forEach(el => mapObserver.observe(el));
+
 </script>
-@endpusha
+@endpush

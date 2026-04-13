@@ -397,59 +397,18 @@
      FOOTER (normal mode only — not shown on full-map pages)
 ============================================================ --}}
 @if(($navMode ?? 'map') === 'normal')
-<footer class="bg-gradient-to-br from-red-700 to-red-900 text-white pt-12 pb-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
-
-            {{-- Brand --}}
-            <div class="space-y-4 lg:col-span-1">
-                <div class="flex items-center gap-3">
-                    <img src="{{ asset('Logo Provinsi Bengkulu.png') }}" alt="Logo" class="w-10 h-10 object-contain" onerror="this.style.display='none'">
-                    <div>
-                        <p class="font-bold text-white leading-tight">Geoportal</p>
-                        <p class="text-xs text-red-200">Provinsi Bengkulu</p>
-                    </div>
-                </div>
-                <p class="text-red-100 text-sm leading-relaxed">
-                    Platform Informasi Geospasial Resmi Provinsi Bengkulu untuk mendukung perencanaan pembangunan dan transparansi data.
-                </p>
-            </div>
-
-            {{-- Quick Links --}}
-            <div class="space-y-3">
-                <h3 class="text-sm font-bold uppercase tracking-wider text-red-200">Tautan Cepat</h3>
-                <div class="space-y-2">
-                    <a href="{{ route('geo') }}" class="block text-red-100 hover:text-white transition text-sm">🗺️ Peta Geospasial</a>
-                    <a href="{{ route('catalog') }}" class="block text-red-100 hover:text-white transition text-sm">📂 Katalog Data</a>
-                    <a href="{{ route('about') }}" class="block text-red-100 hover:text-white transition text-sm">ℹ️ Tentang Kami</a>
-                </div>
-            </div>
-
-            {{-- Kontak --}}
-            <div class="space-y-3">
-                <h3 class="text-sm font-bold uppercase tracking-wider text-red-200">Kontak</h3>
-                <div class="text-red-100 text-sm space-y-2">
-                    <p class="flex items-start gap-2"><span>📍</span> Jl. Jend. Sudirman No. 35, Kota Bengkulu</p>
-                    <p class="flex items-start gap-2"><span>✉️</span> info@geoportal.bengkuluprov.go.id</p>
-                    <p class="flex items-start gap-2"><span>📞</span> (0736) 123456</p>
-                </div>
-            </div>
-
-            {{-- Newsletter --}}
-            <div class="space-y-3">
-                <h3 class="text-sm font-bold uppercase tracking-wider text-red-200">Newsletter</h3>
-                <p class="text-red-100 text-sm">Dapatkan update terbaru data geospasial Bengkulu.</p>
-                <form class="flex gap-2" onsubmit="return false;">
-                    <input type="email" placeholder="Email Anda"
-                           class="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 focus:border-white focus:outline-none text-white placeholder-red-200 text-sm">
-                    <button type="submit" class="px-3 py-2 bg-white text-red-700 font-bold rounded-lg hover:bg-red-50 transition text-sm">→</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-red-300 text-xs">
-            <p>© {{ date('Y') }} Geoportal Provinsi Bengkulu. Hak cipta dilindungi.</p>
-            <p>Dikembangkan oleh Dinas Kominfo Provinsi Bengkulu</p>
+<footer class="bg-white border-t border-gray-100 py-6 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <div class="flex flex-col items-center space-y-2">
+            <!-- Tambahan Logo Kecil di footer biar manis -->
+            <img src="{{ asset('Logo Provinsi Bengkulu.png') }}" class="h-8 mb-2 grayscale opacity-50" alt="Logo">
+            
+            <p class="text-gray-500 text-sm">
+                &copy; {{ date('Y') }} <strong>Geoportal Provinsi Bengkulu</strong>. All rights reserved.
+            </p>
+            <p class="text-gray-400 text-[10px] uppercase tracking-widest">
+                Pemerintah Provinsi Bengkulu
+            </p>
         </div>
     </div>
 </footer>

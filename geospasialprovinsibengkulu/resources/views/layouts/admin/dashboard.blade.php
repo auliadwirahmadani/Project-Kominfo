@@ -110,107 +110,145 @@
         </div>
     </div>
 
-    <!-- Table Section dengan Search & Filter -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-            <h3 class="font-bold text-gray-800 text-lg">Aktivitas Upload Terbaru</h3>
+    <!-- ADVANCED DASHBOARD SECTION -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- KOLOM KIRI (Aktivitas MIngguan & Terbaru) - Lebar 2/3 -->
+        <div class="lg:col-span-2 space-y-6">
             
-            <div class="flex items-center gap-3">
-                <!-- Search Box -->
-                <div class="relative">
-                    <input type="text" id="searchActivity" placeholder="Cari aktivitas..." 
-                        class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 w-64 transition-all">
-                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+            <!-- Grafik Mingguan ApexCharts -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-800 text-lg">Statistik Upload (7 Hari Terakhir)</h3>
+                    <span class="text-xs font-semibold text-red-600 bg-red-50 px-3 py-1 rounded-full">Real-time Data</span>
+                </div>
+                <div id="weeklyChart" class="w-full h-64"></div>
+            </div>
+
+            <!-- Tabel Aktivitas Terbaru -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h3 class="font-bold text-gray-800 text-lg">Aktivitas Upload Terbaru</h3>
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <input type="text" id="searchActivity" placeholder="Cari aktivitas..." 
+                                class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 w-full md:w-56 transition-all">
+                            <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                        </div>
+                        <a href="{{ route('admin.geospasial.index') }}" class="text-sm text-red-600 hover:text-red-700 font-medium px-4 py-2 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap">
+                            Semua
+                        </a>
+                    </div>
                 </div>
                 
-                <a href="{{ route('admin.geospasial.index') }}" class="text-sm text-red-600 hover:text-red-700 font-medium px-4 py-2 hover:bg-red-50 rounded-lg transition-colors">
-                    Lihat Semua
-                </a>
+                <div class="p-6">
+                    <div class="space-y-4" id="activityList">
+                        @forelse($recentActivities as $activity)
+                            <div class="activity-item flex items-center gap-4 p-4 rounded-lg bg-gray-50 border border-transparent hover:bg-white hover:shadow-md hover:border-gray-200 transition-all cursor-pointer">
+                                
+                                {{-- Icon Dinamis --}}
+                                @if($activity->status_verifikasi == 'approved')
+                                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 shrink-0">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                @elseif($activity->status_verifikasi == 'pending')
+                                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 shrink-0">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                @else
+                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                                        <i class="fas fa-upload"></i>
+                                    </div>
+                                @endif
+
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-semibold text-gray-800 truncate">{{ $activity->layer_name }}</h4>
+                                    <p class="text-sm text-gray-500 truncate">Kategori: {{ $activity->category->category_name ?? 'Tanpa Kategori' }}</p>
+                                </div>
+                                
+                                <div class="text-right shrink-0">
+                                    @if($activity->is_published)
+                                        <span class="px-2.5 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-full uppercase tracking-wide">Publik</span>
+                                    @else
+                                        <span class="px-2.5 py-1 bg-gray-200 text-gray-700 text-[10px] font-bold rounded-full uppercase tracking-wide">Draft</span>
+                                    @endif
+                                    <p class="text-xs text-gray-400 mt-1.5">{{ $activity->created_at ? $activity->created_at->diffForHumans() : 'Waktu tidak diketahui' }}</p>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center text-gray-400 py-8">
+                                <i class="fas fa-inbox text-4xl mb-3 opacity-50"></i>
+                                <p>Belum ada aktivitas.</p>
+                            </div>
+                        @endforelse
+                    </div>
+
+                    <!-- Empty State untuk Search -->
+                    <div id="emptyState" class="hidden text-center text-gray-400 py-8">
+                        <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
+                        <p>Tidak ada aktivitas yang ditemukan.</p>
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <div class="p-6">
-            <!-- Activity List Dinamis dari Database -->
-            <div class="space-y-4" id="activityList">
+
+        <!-- KOLOM KANAN (Distribusi Kategori & User Baru) - Lebar 1/3 -->
+        <div class="lg:col-span-1 space-y-6">
+            
+            <!-- Card Kategori Top -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="flex justify-between items-center mb-5">
+                    <h3 class="font-bold text-gray-800 text-md">Distribusi Kategori</h3>
+                    <i class="fas fa-chart-pie text-gray-400"></i>
+                </div>
                 
-                @forelse($recentActivities as $activity)
-                    <div class="activity-item flex items-center gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-transparent hover:border-gray-200">
-                        
-                        {{-- Icon Dinamis Berdasarkan Status Verifikasi --}}
-                        @if($activity->status_verifikasi == 'approved')
-                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                                <i class="fas fa-check"></i>
+                <div class="space-y-4">
+                    @forelse($categoryDistribution as $cat)
+                        @php
+                            $percentage = $totalLayers > 0 ? ($cat->geospatial_layers_count / $totalLayers) * 100 : 0;
+                        @endphp
+                        <div>
+                            <div class="flex justify-between items-center text-sm font-medium mb-1.5">
+                                <span class="text-gray-700">{{ $cat->category_name }}</span>
+                                <span class="text-gray-900 font-bold">{{ $cat->geospatial_layers_count }}</span>
                             </div>
-                        @elseif($activity->status_verifikasi == 'pending')
-                            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                                <i class="fas fa-clock"></i>
+                            <div class="w-full bg-gray-100 rounded-full h-2">
+                                <div class="bg-red-500 h-2 rounded-full" style="width: {{ $percentage }}%"></div>
                             </div>
-                        @else
-                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                <i class="fas fa-upload"></i>
-                            </div>
-                        @endif
-
-                        <div class="flex-1">
-                            <h4 class="font-semibold text-gray-800">{{ $activity->layer_name }}</h4>
-                            <p class="text-sm text-gray-500">Kategori: {{ $activity->category->category_name ?? 'Tanpa Kategori' }}</p>
                         </div>
-                        
-                        <div class="text-right">
-                            @if($activity->is_published)
-                                <span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">Published</span>
-                            @else
-                                <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">Draft</span>
-                            @endif
-                            <p class="text-xs text-gray-400 mt-1">{{ $activity->created_at->diffForHumans() }}</p>
+                    @empty
+                        <p class="text-sm text-gray-500 text-center py-4">Belum ada kategori terisi data.</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Card Pengguna Baru -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="flex justify-between items-center mb-5">
+                    <h3 class="font-bold text-gray-800 text-md">Pengguna Baru</h3>
+                    <a href="{{ route('admin.kelolapengguna') }}" class="text-xs text-red-600 font-semibold hover:underline">Kelola</a>
+                </div>
+
+                <div class="space-y-4">
+                    @forelse($recentUsers as $newuser)
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shrink-0 border border-gray-200">
+                                <span class="text-gray-600 font-bold text-sm">{{ strtoupper(substr($newuser->name, 0, 1)) }}</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold text-gray-800 truncate">{{ $newuser->name }}</p>
+                                <p class="text-xs text-gray-500 truncate">{{ $newuser->role_name ?? 'Verifikator' }}</p>
+                            </div>
+                            <span class="text-[10px] text-gray-400 shrink-0">{{ $newuser->created_at ? $newuser->created_at->format('d M') : '-' }}</span>
                         </div>
-                    </div>
-                @empty
-                    <div class="text-center text-gray-400 py-8">
-                        <i class="fas fa-inbox text-4xl mb-3 opacity-50"></i>
-                        <p>Belum ada aktivitas penambahan data.</p>
-                    </div>
-                @endforelse
-
+                    @empty
+                        <p class="text-sm text-gray-500 text-center py-4">Belum ada user baru.</p>
+                    @endforelse
+                </div>
             </div>
 
-            <!-- Empty State (Hidden by default, untuk JS Search) -->
-            <div id="emptyState" class="hidden text-center text-gray-400 py-8">
-                <i class="fas fa-search text-4xl mb-3 opacity-50"></i>
-                <p>Tidak ada aktivitas yang ditemukan.</p>
-            </div>
         </div>
-        
-        <!-- Mini Chart Section -->
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
-            <h4 class="text-sm font-semibold text-gray-600 mb-3">Statistik Mingguan</h4>
-            <div class="flex items-end gap-2 h-20">
-                <div class="flex-1 bg-red-200 rounded-t hover:bg-red-300 transition-colors relative group" style="height: 40%">
-                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">40%</div>
-                </div>
-                <div class="flex-1 bg-red-300 rounded-t hover:bg-red-400 transition-colors relative group" style="height: 65%">
-                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">65%</div>
-                </div>
-                <div class="flex-1 bg-red-400 rounded-t hover:bg-red-500 transition-colors relative group" style="height: 50%">
-                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">50%</div>
-                </div>
-                <div class="flex-1 bg-red-500 rounded-t hover:bg-red-600 transition-colors relative group" style="height: 80%">
-                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">80%</div>
-                </div>
-                <div class="flex-1 bg-red-600 rounded-t hover:bg-red-700 transition-colors relative group" style="height: 75%">
-                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">75%</div>
-                </div>
-                <div class="flex-1 bg-red-500 rounded-t hover:bg-red-600 transition-colors relative group" style="height: 90%">
-                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">90%</div>
-                </div>
-                <div class="flex-1 bg-red-400 rounded-t hover:bg-red-500 transition-colors relative group" style="height: 60%">
-                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">60%</div>
-                </div>
-            </div>
-            <div class="flex justify-between mt-2 text-xs text-gray-500">
-                <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span>
-            </div>
-        </div>
+
     </div>
 </div>
 
@@ -292,5 +330,60 @@
             toast.classList.add('translate-y-20', 'opacity-0');
         }, 3000);
     }
+</script>
+
+<!-- ApexCharts Script -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var rawDates = @json($weeklyDates);
+        var rawCounts = @json($weeklyCounts);
+
+        var options = {
+            series: [{
+                name: 'Dataset Baru',
+                data: rawCounts
+            }],
+            chart: {
+                height: 250,
+                type: 'area',
+                toolbar: { show: false },
+                fontFamily: 'Inter, sans-serif'
+            },
+            colors: ['#dc2626'],
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.45,
+                    opacityTo: 0.05,
+                    stops: [20, 100]
+                }
+            },
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 3 },
+            xaxis: {
+                categories: rawDates,
+                axisBorder: { show: false },
+                axisTicks: { show: false },
+                labels: { style: { colors: '#94a3b8' } }
+            },
+            yaxis: {
+                labels: { style: { colors: '#94a3b8' }, formatter: (val) => { return Math.floor(val) } }
+            },
+            grid: {
+                borderColor: '#f1f5f9',
+                strokeDashArray: 4,
+                yaxis: { lines: { show: true } }
+            },
+            tooltip: {
+                theme: 'light',
+                y: { formatter: function (val) { return val + " Layers" } }
+            }
+        };
+
+        var chart = new ApexCharts(document.querySelector("#weeklyChart"), options);
+        chart.render();
+    });
 </script>
 @endsection

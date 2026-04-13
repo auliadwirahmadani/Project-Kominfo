@@ -137,6 +137,41 @@
             </button>
         </div>
 
+        {{-- PROFILE CARD DI ATAS --}}
+        @auth
+        @php
+            $user = auth()->user();
+            $initial = strtoupper(substr($user->name ?? 'A', 0, 1));
+            // Cek foto profile jika ada
+            $profile = $user->profile ?? null;
+            $photoUrl = ($profile && $profile->photo && file_exists(public_path('storage/' . $profile->photo)))
+                ? asset('storage/' . $profile->photo)
+                : null;
+        @endphp
+        <div class="p-4 border-b border-white/10 flex-shrink-0">
+            <div class="profile-card p-3 rounded-xl flex items-center gap-3 mb-3">
+                @if($photoUrl)
+                    <img src="{{ $photoUrl }}" alt="Foto" class="w-10 h-10 rounded-full object-cover border-2 border-white/50 shrink-0">
+                @else
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-red-700 font-bold shrink-0">
+                        {{ $initial }}
+                    </div>
+                @endif
+
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-semibold truncate">{{ $user->name }}</div>
+                    <div class="text-xs text-red-200 truncate">{{ $user->email }}</div>
+                </div>
+            </div>
+
+            {{-- Tombol Edit Profil --}}
+            <a href="{{ route('admin.profile') }}" 
+               class="w-full flex items-center justify-center gap-2 py-2 rounded-lg {{ Request::routeIs('admin.profile*') ? 'bg-white/20 text-white' : 'bg-white/10 text-red-100 hover:bg-white/20 hover:text-white' }} transition-colors text-sm font-medium">
+                <i class="fas fa-user-edit"></i> Edit Profil Saya
+            </a>
+        </div>
+        @endauth
+
         <!-- MENU -->
         <div class="flex-1 overflow-y-auto sidebar-scroll py-4">
             <nav class="px-3 space-y-1">
@@ -184,31 +219,18 @@
             </nav>
         </div>
 
-        <!-- PROFILE -->
-        <div class="p-4 border-t border-white/10">
+        {{-- LOGOUT DI PALING BAWAH --}}
+        <div class="p-4 border-t border-white/10 flex-shrink-0">
             @auth
-            @php
-                $user = auth()->user();
-                $initial = strtoupper(substr($user->name ?? 'A', 0, 1));
-            @endphp
-
-            <div class="profile-card p-3 rounded-xl flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-red-700 font-bold shrink-0">
-                    {{ $initial }}
-                </div>
-
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-semibold truncate">{{ $user->name }}</div>
-                    <div class="text-xs text-red-200 truncate">{{ $user->email }}</div>
-                </div>
-
-                <form method="POST" action="{{ route('logout') }}" class="inline">
-                    @csrf
-                    <button type="submit" class="hover:bg-white/10 p-2 rounded-lg transition-colors" title="Logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </button>
-                </form>
-            </div>
+            <form method="POST" action="{{ route('logout') }}" class="block">
+                @csrf
+                <button type="submit" 
+                        class="w-full flex items-center justify-center gap-2 hover:bg-white/10 p-3 rounded-lg transition-colors text-red-100 hover:text-white" 
+                        title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="font-medium">Keluar / Logout</span>
+                </button>
+            </form>
             @endauth
         </div>
 

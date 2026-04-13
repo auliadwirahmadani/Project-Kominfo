@@ -6,10 +6,12 @@ use Illuminate\Http\Request;
 use App\Models\GeospatialLayer;
 use App\Models\MetadataLayer;
 use App\Models\Category;
+use App\Models\Profile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 
 class ProdusenController extends Controller
 {
@@ -19,11 +21,13 @@ class ProdusenController extends Controller
     public function dashboard()
     {
         $userId = auth()->id();
-        $totalLayers = GeospatialLayer::count();
-        $totalPublished = GeospatialLayer::where('is_published', 1)->count();
-        $totalPending = GeospatialLayer::where('status_verifikasi', 'pending')->count();
+        $totalLayers = GeospatialLayer::where('user_id', $userId)->count();
+        $totalPublished = GeospatialLayer::where('user_id', $userId)->where('is_published', 1)->count();
+        $totalPending = GeospatialLayer::where('user_id', $userId)->where('status_verifikasi', 'pending')->count();
+        $totalRejected = GeospatialLayer::where('user_id', $userId)->where('status_verifikasi', 'rejected')->count();
+        $layers = GeospatialLayer::where('user_id', $userId)->with(['category', 'metadata'])->latest()->paginate(10);
 
-        return view('layouts.produsen.dashboard', compact('totalLayers', 'totalPublished', 'totalPending'));
+        return view('layouts.produsen.dashboard', compact('totalLayers', 'totalPublished', 'totalPending', 'totalRejected', 'layers'));
     }
 
     /**
@@ -31,7 +35,7 @@ class ProdusenController extends Controller
      */
     public function geospasial()
     {
-        $layers = GeospatialLayer::with('category')->latest()->paginate(10);
+        $layers = GeospatialLayer::where('user_id', auth()->id())->with('category')->latest()->paginate(10);
         $categories = Category::all();
         return view('layouts.produsen.kelolageospasial', compact('layers', 'categories'));
     }
@@ -70,6 +74,7 @@ class ProdusenController extends Controller
             $filePath = $file->storeAs('geospatial', $fileName, 'public');
 
             GeospatialLayer::create([
+                'user_id'           => auth()->id(),
                 'layer_name'        => $validated['layer_name'],
                 'category_id'       => $validated['category_id'],
                 'description'       => $validated['description'],
@@ -94,7 +99,7 @@ class ProdusenController extends Controller
      */
     public function edit($id)
     {
-        $layer = GeospatialLayer::findOrFail($id);
+        $layer = GeospatialLayer::where('user_id', auth()->id())->findOrFail($id);
         $categories = Category::all();
         return view('layouts.produsen.edit', compact('layer', 'categories'));
     }
@@ -104,7 +109,7 @@ class ProdusenController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $layer = GeospatialLayer::findOrFail($id);
+        $layer = GeospatialLayer::where('user_id', auth()->id())->findOrFail($id);
 
         $validated = $request->validate([
             'layer_name'  => 'required|string|max:255',
@@ -133,7 +138,7 @@ class ProdusenController extends Controller
      */
     public function destroy($id)
     {
-        $layer = GeospatialLayer::findOrFail($id);
+        $layer = GeospatialLayer::where('user_id', auth()->id())->findOrFail($id);
         if ($layer->file_path) Storage::disk('public')->delete($layer->file_path);
         $layer->delete();
         return redirect()->route('produsen.geospasial.index')->with('success', '✅ Data berhasil dihapus!');
@@ -144,7 +149,7 @@ class ProdusenController extends Controller
      */
     public function metadata()
     {
-        $layers = GeospatialLayer::with('metadata')->latest()->get();
+        $layers = GeospatialLayer::where('user_id', auth()->id())->with('metadata')->latest()->get();
         return view('layouts.produsen.kelolametadata', compact('layers'));
     }
 
@@ -200,11 +205,55 @@ class ProdusenController extends Controller
     }
 
     /**
-     * Menampilkan halaman Monitoring Status
+     * Tampilkan halaman profil produsen
      */
-    public function monitoring()
+    public function showProfile()
     {
-        $layers = GeospatialLayer::with(['category', 'metadata'])->latest()->paginate(10);
-        return view('layouts.produsen.monitoringstatus', compact('layers'));
+        $user    = auth()->user();
+        $profile = $user->profile ?? new Profile(['user_id' => $user->user_id]);
+        return view('layouts.produsen.profile', compact('user', 'profile'));
+    }
+
+    /**
+     * Simpan perubahan profil produsen (foto, nama, bio, instansi)
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'alamat'   => 'nullable|string|max:500',
+            'no_hp'    => 'nullable|string|max:20',
+            'bio'      => 'nullable|string|max:1000',
+            'photo'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        $pendingData = [
+            'name'     => $validated['name'],
+            'instansi' => $validated['name'],
+            'alamat'   => $validated['alamat'] ?? null,
+            'no_hp'    => $validated['no_hp'] ?? null,
+            'bio'      => $validated['bio'] ?? null,
+        ];
+
+        // Handle upload foto
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $fileName = 'profile_photos/pending_' . $user->user_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('profile_photos', 'pending_' . $user->user_id . '_' . time() . '.' . $file->getClientOriginalExtension(), 'public');
+            $pendingData['photo'] = $fileName;
+        } else {
+             // Jika tidak ada foto diunggah, kita simpan old photo agar preview verifikator konsisten (meskipun null)
+             $pendingData['photo'] = $user->profile?->photo ?? null;
+        }
+
+        // Simpan hanya ke pending_data
+        Profile::updateOrCreate(
+            ['user_id' => $user->user_id],
+            ['pending_data' => $pendingData]
+        );
+
+        return redirect()->route('produsen.profile')->with('success', '✅ Perubahan profil disimpan dan sedang menunggu verifikasi!');
     }
 }

@@ -106,13 +106,13 @@
 
 <body>
 
-<div class="flex min-h-screen">
+<div class="flex min-h-screen overflow-x-hidden w-full">
 
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <aside id="sidebar" class="sidebar fixed left-0 top-0 w-64 sidebar-glass text-white h-screen flex flex-col z-50">
 
-        <div class="h-20 flex items-center px-6 border-b border-white/10">
+        <div class="h-20 flex flex-shrink-0 items-center px-6 border-b border-white/10">
             <a href="{{ route('geo') ?? '#' }}" class="flex items-center gap-3 logo-hover">
                 <img src="{{ asset('logo provinsi bengkulu.png') }}"
                      alt="Logo Geoportal"
@@ -130,6 +130,46 @@
             </button>
         </div>
 
+        {{-- PROFILE CARD DI ATAS --}}
+        @auth
+        @php
+            $user    = auth()->user();
+            $initial = strtoupper(substr($user->name ?? 'P', 0, 1));
+            $profile = $user->profile;
+            $photoUrl = ($profile && $profile->photo && file_exists(public_path('storage/' . $profile->photo)))
+                ? asset('storage/' . $profile->photo)
+                : null;
+        @endphp
+        <div class="p-4 border-b border-white/10 flex-shrink-0">
+            <div class="profile-card p-3 rounded-xl flex items-center gap-3 mb-3">
+                {{-- Avatar: foto atau inisial --}}
+                @if($photoUrl)
+                    <img
+                        src="{{ $photoUrl }}"
+                        alt="Foto {{ $user->name }}"
+                        class="w-10 h-10 rounded-full object-cover border-2 border-white/50 shrink-0"
+                    >
+                @else
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-red-700 font-bold shrink-0">
+                        {{ $initial }}
+                    </div>
+                @endif
+
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-semibold truncate">{{ $user->name ?? 'Produsen Data' }}</div>
+                    <div class="text-xs text-red-200 truncate">{{ $user->email ?? 'produsen@bengkulu.go.id' }}</div>
+                </div>
+            </div>
+
+            {{-- Tombol Edit Profil --}}
+            <a href="{{ route('produsen.profile') }}" 
+               class="w-full flex items-center justify-center gap-2 py-2 rounded-lg {{ Request::routeIs('produsen.profile*') ? 'bg-white/20 text-white' : 'bg-white/10 text-red-100 hover:bg-white/20 hover:text-white' }} transition-colors text-sm font-medium">
+                <i class="fas fa-user-edit"></i> Edit Profil Saya
+            </a>
+        </div>
+        @endauth
+
+        {{-- MAIN MENU SEKARANG DI TENGAH --}}
         <div class="flex-1 overflow-y-auto sidebar-scroll py-4">
             <nav class="px-3 space-y-1">
 
@@ -157,36 +197,24 @@
             </nav>
         </div>
 
-        <div class="p-4 border-t border-white/10">
+        {{-- LOGOUT DI PALING BAWAH --}}
+        <div class="p-4 border-t border-white/10 flex-shrink-0">
             @auth
-            @php
-                $user = auth()->user();
-                $initial = strtoupper(substr($user->name ?? 'P', 0, 1));
-            @endphp
-
-            <div class="profile-card p-3 rounded-xl flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-red-700 font-bold shrink-0">
-                    {{ $initial }}
-                </div>
-
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-semibold truncate">{{ $user->name ?? 'Produsen Data' }}</div>
-                    <div class="text-xs text-red-200 truncate">{{ $user->email ?? 'produsen@bengkulu.go.id' }}</div>
-                </div>
-
-                <form method="POST" action="{{ route('logout') }}" class="inline">
-                    @csrf
-                    <button type="submit" class="hover:bg-white/10 p-2 rounded-lg transition-colors" title="Logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </button>
-                </form>
-            </div>
+            <form method="POST" action="{{ route('logout') }}" class="block">
+                @csrf
+                <button type="submit" 
+                        class="w-full flex items-center justify-center gap-2 hover:bg-white/10 p-3 rounded-lg transition-colors text-red-100 hover:text-white" 
+                        title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="font-medium">Keluar / Logout</span>
+                </button>
+            </form>
             @endauth
         </div>
 
     </aside>
 
-    <main class="main-content flex-1 ml-64 flex flex-col min-h-screen">
+    <main class="main-content flex-1 min-w-0 ml-64 flex flex-col min-h-screen">
 
         <header class="h-16 topbar-glass flex items-center px-8 sticky top-0 z-30">
             <button onclick="toggleSidebar()" class="lg:hidden mr-4 text-gray-600 hover:text-gray-900">
@@ -198,11 +226,11 @@
             </h2>
         </header>
 
-        <div class="p-8 flex-1">
-            <div class="content-card p-6">
-
+        <div class="flex-1 flex flex-col w-full relative overflow-x-auto min-h-0">
+            
+            <div class="w-full px-4 md:px-8 mt-4 mx-auto z-10 relative">
                 @if(session('success'))
-                    <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-start gap-3 alert-dismissible">
+                    <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-start gap-3 alert-dismissible shadow-sm">
                         <i class="fas fa-check-circle mt-0.5"></i>
                         <span>{{ session('success') }}</span>
                         <button onclick="this.closest('.alert-dismissible').remove()" class="ml-auto text-green-500 hover:text-green-700">
@@ -212,7 +240,7 @@
                 @endif
 
                 @if(session('error'))
-                    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-3 alert-dismissible">
+                    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-3 alert-dismissible shadow-sm">
                         <i class="fas fa-exclamation-circle mt-0.5"></i>
                         <span>{{ session('error') }}</span>
                         <button onclick="this.closest('.alert-dismissible').remove()" class="ml-auto text-red-500 hover:text-red-700">
@@ -222,7 +250,7 @@
                 @endif
 
                 @if($errors->any())
-                    <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700">
+                    <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 shadow-sm">
                         <div class="flex items-center gap-2 mb-2">
                             <i class="fas fa-exclamation-triangle"></i>
                             <strong>Terjadi kesalahan:</strong>
@@ -234,10 +262,12 @@
                         </ul>
                     </div>
                 @endif
-
-                @yield('content')
-
             </div>
+
+            <div class="flex-1 w-full flex flex-col">
+                @yield('content')
+            </div>
+
         </div>
 
         <footer class="px-8 py-4 text-center text-sm text-gray-500 border-t border-gray-100">

@@ -119,8 +119,16 @@
     $currentSearch = request('search', '');
 @endphp
 
-<div class="bg-gradient-to-br from-slate-50 via-indigo-50/30 to-blue-50 min-h-screen p-4 md:p-8">
+<div x-data="geoVerifyManager()" class="bg-gradient-to-br from-slate-50 via-indigo-50/30 to-blue-50 min-h-screen p-4 md:p-8">
 <div class="max-w-7xl mx-auto space-y-6">
+
+    {{-- Session Message --}}
+    @if(session('success'))
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-3 rounded-xl flex items-center gap-3 animate-fade-in mb-4">
+        <svg class="w-5 h-5 shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="font-semibold text-sm">{{ session('success') }}</span>
+    </div>
+    @endif
 
     {{-- ================================================================
          HEADER
@@ -414,20 +422,11 @@
 
                                 {{-- Aksi --}}
                                 <td class="text-center">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <a href="{{ route('verifikator.geospasial.index') }}"
-                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition text-xs font-bold"
-                                           title="Verifikasi Geospasial">
-                                            <span>Geo</span>
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                                        </a>
-                                        <a href="{{ route('verifikator.metadata.index') }}"
-                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-violet-50 text-violet-600 hover:bg-violet-100 transition text-xs font-bold"
-                                           title="Verifikasi Metadata">
-                                            <span>Meta</span>
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                                        </a>
-                                    </div>
+                                    <button type="button" @click="openModal({{ $layer->geospatial_id }}, '{{ addslashes($layer->layer_name) }}', '{{ $status }}')" 
+                                            class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white shadow-sm transition text-xs font-bold">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        Aksi Cepat
+                                    </button>
                                 </td>
                             </tr>
                             @empty
@@ -661,12 +660,121 @@
     </div>{{-- end tab container --}}
 
 </div>
+
+{{-- ================================================================
+     MODAL 1 — KEPUTUSAN VERIFIKASI (INLINE QUICK ACTION)
+================================================================ --}}
+<div x-show="isModalOpen"
+     style="display: none;"
+     @click.self="closeModal()"
+     @keydown.escape.window="closeModal()"
+     class="fixed inset-0 z-[200] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
+
+    <div x-show="isModalOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+         class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
+
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-5 text-white text-center shrink-0 relative rounded-t-2xl">
+            <button type="button" @click="closeModal()"
+                class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h3 class="text-lg font-bold flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Aksi Cepat Keputusan Verifikasi
+            </h3>
+            <p class="text-indigo-200 mt-1 text-xs font-medium line-clamp-1" x-text="activeLayerName"></p>
+        </div>
+
+        <form :action="'{{ url('verifikator/geospasial') }}/' + activeLayerId + '/verify'" method="POST"
+              class="p-5 overflow-y-auto flex-1">
+            @csrf
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-800 mb-3">Keputusan <span class="text-red-500">*</span></label>
+                    <div class="grid grid-cols-3 gap-2.5">
+                        {{-- TERIMA --}}
+                        <label class="relative flex flex-col items-center justify-center p-3.5 border-2 border-gray-100 rounded-xl cursor-pointer hover:bg-gray-50 transition shadow-sm">
+                            <input type="radio" name="status_verifikasi" value="approved" class="sr-only peer" x-model="statusForm" required>
+                            <div class="w-11 h-11 bg-green-100 rounded-full flex items-center justify-center mb-2 text-green-600 transition-colors peer-checked:bg-green-500 peer-checked:text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <span class="font-bold text-sm text-gray-700 peer-checked:text-green-700">Terima</span>
+                            <div class="absolute inset-0 border-2 border-transparent peer-checked:border-green-500 rounded-xl pointer-events-none transition-all"></div>
+                        </label>
+                        {{-- TOLAK --}}
+                        <label class="relative flex flex-col items-center justify-center p-3.5 border-2 border-gray-100 rounded-xl cursor-pointer hover:bg-gray-50 transition shadow-sm">
+                            <input type="radio" name="status_verifikasi" value="rejected" class="sr-only peer" x-model="statusForm">
+                            <div class="w-11 h-11 bg-red-100 rounded-full flex items-center justify-center mb-2 text-red-600 transition-colors peer-checked:bg-red-500 peer-checked:text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </div>
+                            <span class="font-bold text-sm text-gray-700 peer-checked:text-red-700">Tolak</span>
+                            <div class="absolute inset-0 border-2 border-transparent peer-checked:border-red-500 rounded-xl pointer-events-none transition-all"></div>
+                        </label>
+                        {{-- TUNDA --}}
+                        <label class="relative flex flex-col items-center justify-center p-3.5 border-2 border-gray-100 rounded-xl cursor-pointer hover:bg-gray-50 transition shadow-sm">
+                            <input type="radio" name="status_verifikasi" value="pending" class="sr-only peer" x-model="statusForm">
+                            <div class="w-11 h-11 bg-yellow-100 rounded-full flex items-center justify-center mb-2 text-yellow-600 transition-colors peer-checked:bg-yellow-400 peer-checked:text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <span class="font-bold text-sm text-gray-700 peer-checked:text-yellow-700">Tunda</span>
+                            <div class="absolute inset-0 border-2 border-transparent peer-checked:border-yellow-400 rounded-xl pointer-events-none transition-all"></div>
+                        </label>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-xl border border-gray-200 p-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Catatan <span class="text-xs font-normal text-gray-400">(Opsional)</span></label>
+                    <textarea name="catatan" rows="3" placeholder="Tuliskan catatan, alasan penolakan, atau instruksi..."
+                        class="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm text-gray-700 placeholder-gray-400 resize-none bg-white transition-shadow"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2.5 mt-4 pt-4 border-t border-gray-100">
+                <button type="button" @click="closeModal()"
+                    class="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-bold hover:bg-gray-100 transition text-sm">Batal</button>
+                <button type="submit"
+                    class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-indigo-200 flex items-center gap-2 transition text-sm">
+                    Simpan Keputusan
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+
+</div>
+
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
 <script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('geoVerifyManager', () => ({
+        isModalOpen: false,
+        activeLayerId: null,
+        activeLayerName: '',
+        statusForm: 'pending',
+
+        openModal(id, name, currentStatus) {
+            this.activeLayerId   = id;
+            this.activeLayerName = name;
+            this.statusForm = ['approved','rejected','pending'].includes(currentStatus) ? currentStatus : 'pending';
+            this.isModalOpen = true;
+            document.body.style.overflow = 'hidden';
+        },
+        closeModal() {
+            this.isModalOpen = false;
+            setTimeout(() => { this.activeLayerId = null; this.activeLayerName = ''; }, 300);
+            document.body.style.overflow = '';
+        }
+    }));
+});
+
 document.addEventListener('DOMContentLoaded', function () {
     // Animate progress bars on load
     document.querySelectorAll('.progress-fill').forEach(bar => {

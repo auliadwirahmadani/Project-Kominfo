@@ -37,7 +37,7 @@
                 <i class="fas fa-chart-pie text-red-600"></i> Ringkasan Data Anda
             </h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 
                 {{-- Total Data --}}
                 <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 relative overflow-hidden group">
@@ -67,18 +67,149 @@
                     </div>
                 </div>
 
-                {{-- Dipublikasikan --}}
+                {{-- Ditolak (Baru) --}}
                 <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-red-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                     <div class="flex justify-between items-start relative z-10">
                         <div>
-                            <p class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Dipublikasikan</p>
-                            <h3 class="text-4xl font-black text-green-600">{{ $totalPublished ?? 0 }}</h3>
+                            <p class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Ditolak / Revisi</p>
+                            <h3 class="text-4xl font-black text-red-600">{{ $totalRejected ?? 0 }}</h3>
                         </div>
-                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 text-xl shadow-inner">
-                            <i class="fas fa-globe-asia"></i>
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600 text-xl shadow-inner">
+                            <i class="fas fa-times-circle"></i>
                         </div>
                     </div>
+                </div>
+
+            </div>
+        </div>
+
+        {{-- ================================================================
+             MONITORING PUBLIKASI & RIWAYAT (BARU)
+        ================================================================ --}}
+        <div>
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-satellite text-red-600"></i> Monitoring Status Publikasi
+            </h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {{-- Donut Chart Visual --}}
+                <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+                    <h3 class="font-bold text-gray-800 text-sm mb-4">Distribusi Data Geospasial Secara Keseluruhan</h3>
+
+                    @php $total = max($totalLayers ?? 0, 1); @endphp
+                    <div class="rounded-xl overflow-hidden h-5 w-full flex mb-4 border border-gray-200">
+                        @if(($totalPublished ?? 0) > 0)
+                        <div class="h-full bg-green-400 transition-all" style="width: {{ (($totalPublished ?? 0)/$total)*100 }}%" title="Dipublikasikan: {{ $totalPublished }}"></div>
+                        @endif
+                        @if(($totalPending ?? 0) > 0)
+                        <div class="h-full bg-yellow-400 transition-all" style="width: {{ (($totalPending ?? 0)/$total)*100 }}%" title="Menunggu: {{ $totalPending }}"></div>
+                        @endif
+                        @if(($totalRejected ?? 0) > 0)
+                        <div class="h-full bg-red-400 transition-all" style="width: {{ (($totalRejected ?? 0)/$total)*100 }}%" title="Ditolak: {{ $totalRejected }}"></div>
+                        @endif
+                        @if(($totalLayers ?? 0) === 0)
+                        <div class="h-full bg-gray-200 w-full"></div>
+                        @endif
+                    </div>
+
+                    <div class="space-y-3 mt-5">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded bg-green-400"></span>
+                                <span class="text-sm font-semibold text-gray-600">Dipublikasikan (Disetujui)</span>
+                            </div>
+                            <span class="text-sm font-black text-gray-800">{{ $totalPublished ?? 0 }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded bg-yellow-400"></span>
+                                <span class="text-sm font-semibold text-gray-600">Terpending (Menunggu)</span>
+                            </div>
+                            <span class="text-sm font-black text-gray-800">{{ $totalPending ?? 0 }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded bg-red-400"></span>
+                                <span class="text-sm font-semibold text-gray-600">Ditolak / Perlu Revisi</span>
+                            </div>
+                            <span class="text-sm font-black text-gray-800">{{ $totalRejected ?? 0 }}</span>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                {{-- Full Laporan Tabular --}}
+                <div class="lg:col-span-2 bg-white rounded-2xl shadow-md border border-gray-100 relative overflow-hidden flex flex-col">
+                    <div class="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-800 text-sm">Riwayat Laporan & Status Publikasi</h3>
+                    </div>
+                    
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left border-collapse min-w-[700px]">
+                            <thead>
+                                <tr>
+                                    <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100">#</th>
+                                    <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100">Dataset</th>
+                                    <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100">Status</th>
+                                    <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100">Catatan</th>
+                                    <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100">Publikasi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($layers as $i => $layer)
+                                    @php $s = $layer->status_verifikasi; @endphp
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <td class="py-4 px-4 text-xs text-gray-400 font-mono border-b border-gray-50">
+                                            {{ ($layers->currentPage() - 1) * $layers->perPage() + $i + 1 }}
+                                        </td>
+                                        <td class="py-4 px-4 border-b border-gray-50">
+                                            <p class="text-sm font-bold text-gray-800 line-clamp-1" title="{{ $layer->layer_name }}">{{ $layer->layer_name }}</p>
+                                            <p class="text-[11px] text-indigo-600 font-bold mt-0.5">{{ $layer->category->category_name ?? '-' }}</p>
+                                        </td>
+                                        <td class="py-4 px-4 border-b border-gray-50">
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold
+                                                {{ $s === 'approved' ? 'bg-green-100 text-green-700' : ($s === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700') }}">
+                                                {{ $s === 'approved' ? 'Disetujui' : ($s === 'rejected' ? 'Ditolak' : 'Menunggu') }}
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-4 border-b border-gray-50">
+                                            @if($layer->catatan_verifikator)
+                                                <p class="text-[11px] text-orange-700 bg-orange-50 p-2 rounded-lg max-w-[200px] line-clamp-2" title="{{ $layer->catatan_verifikator }}">
+                                                    {{ $layer->catatan_verifikator }}
+                                                </p>
+                                            @else
+                                                <span class="text-[11px] text-gray-400 italic">Tidak ada catatan</span>
+                                            @endif
+                                        </td>
+                                        <td class="py-4 px-4 border-b border-gray-50">
+                                            @if($layer->is_published)
+                                                <span class="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md"><i class="fas fa-globe mr-1"></i> Publik</span>
+                                            @else
+                                                <span class="text-[11px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-md"><i class="fas fa-lock mr-1"></i> Private</span>
+                                            @endif
+                                            <p class="text-[10px] text-gray-400 mt-1">{{ $layer->updated_at->format('d M, H:i') }}</p>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="py-12 text-center">
+                                            <i class="fas fa-folder-open text-3xl text-gray-300 mb-2"></i>
+                                            <p class="text-sm text-gray-500">Belum ada dataset geospasial.</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {{-- Pagination Form --}}
+                    @if($layers->hasPages())
+                    <div class="p-4 border-t border-gray-100 bg-gray-50 flex-shrink-0">
+                        {{ $layers->links() }}
+                    </div>
+                    @endif
                 </div>
 
             </div>

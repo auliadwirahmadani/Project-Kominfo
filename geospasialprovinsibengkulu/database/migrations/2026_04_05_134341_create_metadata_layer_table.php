@@ -11,38 +11,40 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('metadata_layer', function (Blueprint $table) {
-            // Primary Key
-            $table->id('metadata_id'); 
-            
-            // Foreign Key
-            $table->unsignedBigInteger('geospatial_id');
+        if (!Schema::hasTable('metadata_layer')) {
+            Schema::create('metadata_layer', function (Blueprint $table) {
+                // Primary Key
+                $table->id('metadata_id'); 
+                
+                // Foreign Key
+                $table->unsignedBigInteger('geospatial_id');
 
-            // Data Kolom Metadata
-            $table->string('title')->nullable();
-            $table->string('identifier')->nullable();
-            $table->text('abstract')->nullable();
-            $table->string('source')->nullable();
-            $table->year('year')->nullable();
-            $table->string('crs')->nullable();
-            $table->string('scale')->nullable();
-            $table->string('data_type')->nullable();
-            $table->string('organization')->nullable();
-            $table->date('publication_date')->nullable();
-            $table->string('distribution_protocol')->nullable();
-            $table->text('distribution_url')->nullable(); 
-            $table->string('keywords')->nullable();
-            $table->string('layer_name_service')->nullable();
-            $table->string('preview_image')->nullable();
-            
-            $table->timestamps();
+                // Data Kolom Metadata
+                $table->string('title')->nullable();
+                $table->string('identifier')->nullable();
+                $table->text('abstract')->nullable();
+                $table->string('source')->nullable();
+                $table->year('year')->nullable();
+                $table->string('crs')->nullable();
+                $table->string('scale')->nullable();
+                $table->string('data_type')->nullable();
+                $table->string('organization')->nullable();
+                $table->date('publication_date')->nullable();
+                $table->string('distribution_protocol')->nullable();
+                $table->text('distribution_url')->nullable(); 
+                $table->string('keywords')->nullable();
+                $table->string('layer_name_service')->nullable();
+                $table->string('preview_image')->nullable();
+                
+                $table->timestamps();
 
-            // Constraint Foreign Key
-            $table->foreign('geospatial_id')
-                  ->references('geospatial_id')
-                  ->on('geospatial_layer')
-                  ->onDelete('cascade');
-        });
+                // Constraint Foreign Key
+                $table->foreign('geospatial_id')
+                      ->references('geospatial_id')
+                      ->on('geospatial_layer')
+                      ->onDelete('cascade');
+            });
+        }
     }
 
     /**

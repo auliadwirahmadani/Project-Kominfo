@@ -3,6 +3,7 @@
 @section('page-title', 'Kelola Geospasial')
 
 @push('styles')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
     /* ============================================================
        KELOLA GEOSPASIAL — DESIGN SYSTEM
@@ -101,7 +102,15 @@
 
             <div class="status-stripe {{ $status }}"></div>
 
-            <div class="p-5 flex-1 flex flex-col">
+            {{-- 🗺️ MAP PREVIEW HEADER --}}
+            <div class="relative w-full h-36 bg-gray-100 overflow-hidden border-b border-gray-100">
+                <div id="mini-map-{{ $layer->geospatial_id }}" class="w-full h-full z-0 relative"></div>
+                <div id="loader-{{ $layer->geospatial_id }}" class="absolute inset-0 flex items-center justify-center bg-gray-50/80 z-10">
+                    <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </div>
+            </div>
+
+            <div class="p-4 flex-1 flex flex-col">
                 <div class="flex items-start justify-between gap-3 mb-3">
                     <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center shrink-0 border border-indigo-100">
                         <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
@@ -137,6 +146,17 @@
                     </div>
                 </div>
 
+                {{-- Verifikator Notes --}}
+                @if($layer->catatan_verifikator)
+                    <div class="mt-3 p-3 text-xs bg-orange-50 border border-orange-200 text-orange-800 rounded-lg shadow-sm">
+                        <strong class="block mb-1 text-orange-900 flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                            Catatan Verifikator:
+                        </strong>
+                        <p class="leading-relaxed">{{ $layer->catatan_verifikator }}</p>
+                    </div>
+                @endif
+
                 {{-- Action Buttons --}}
                 <div class="flex gap-2 mt-4 pt-4 border-t border-gray-100">
                     @php
@@ -148,6 +168,11 @@
                             'filename' => basename($layer->file_path)
                         ];
                     @endphp
+                    <a href="{{ route('geo') }}?layer={{ $layer->geospatial_id }}" target="_blank"
+                       class="flex-1 py-1.5 flex items-center justify-center gap-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        Lihat
+                    </a>
                     <button type="button" @click='openEditModal(@json($editData))'
                         class="flex-1 py-1.5 flex items-center justify-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold transition">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
@@ -314,7 +339,63 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
+<!-- Leaflet & SHP JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Load Leaflet Previews
+    @foreach($layers as $layer)
+        loadMiniPreview("{{ $layer->geospatial_id }}");
+    @endforeach
+
+    async function loadMiniPreview(id) {
+        const mapId = `mini-map-${id}`;
+        const loader = document.getElementById(`loader-${id}`);
+        const mapElement = document.getElementById(mapId);
+        if (!mapElement) return;
+
+        // Init Map
+        const miniMap = L.map(mapId, {
+            zoomControl: false,
+            attributionControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false
+        }).setView([-3.8, 102.3], 8);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMap);
+
+        try {
+            const response = await fetch(`/geospatial/${id}/geojson`);
+            if (!response.ok) throw new Error('GeoJSON not found');
+            const data = await response.json();
+            
+            let geoLayer;
+            if (data.is_shapefile) {
+                const geojson = await shp(data.url);
+                geoLayer = L.geoJSON(geojson);
+            } else {
+                geoLayer = L.geoJSON(data);
+            }
+
+            geoLayer.setStyle({
+                color: "#4f46e5",
+                weight: 1.5,
+                fillOpacity: 0.2,
+                fillColor: "#6366f1"
+            });
+            geoLayer.addTo(miniMap);
+            miniMap.fitBounds(geoLayer.getBounds());
+        } catch (error) {
+            console.error("Map layer failed to load", id);
+        } finally {
+            if (loader) loader.style.display = 'none';
+        }
+    }
+});
+
 document.addEventListener('alpine:init', () => {
     Alpine.data('geoManager', () => ({
         search: '',

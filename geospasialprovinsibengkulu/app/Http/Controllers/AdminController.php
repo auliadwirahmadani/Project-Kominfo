@@ -28,13 +28,37 @@ class AdminController extends Controller
                             ->take(5)
                             ->get();
 
-        // 3. Kirim data ke view
+        // 3. Distribusi Kategori (menghitung jumlah layer tiap kategori)
+        $categoryDistribution = Category::has('geospatialLayers')
+                                ->withCount('geospatialLayers')
+                                ->orderByDesc('geospatial_layers_count')
+                                ->take(5)
+                                ->get();
+
+        // 4. Pengguna Baru Bergabung
+        $recentUsers = User::latest()->take(5)->get();
+
+        // 5. Statistik Mingguan (7 Hari Terakhir)
+        $weeklyDates = collect();
+        $weeklyCounts = collect();
+        for ($i = 6; $i >= 0; $i--) {
+            $date = \Carbon\Carbon::now()->subDays($i);
+            $weeklyDates->push($date->translatedFormat('D, d M')); 
+            $count = GeospatialLayer::whereDate('created_at', $date->format('Y-m-d'))->count();
+            $weeklyCounts->push($count);
+        }
+
+        // 6. Kirim data ke view
         return view('layouts.admin.dashboard', compact(
             'totalUsers', 
             'totalLayers', 
             'totalPublished', 
             'totalCategories',
-            'recentActivities'
+            'recentActivities',
+            'categoryDistribution',
+            'recentUsers',
+            'weeklyDates',
+            'weeklyCounts'
         ));
     }
 
@@ -43,7 +67,7 @@ class AdminController extends Controller
     // ===============================
     public function kelolapengguna(Request $request)
     {
-        $query = User::with('role');
+        $query = User::with(['role', 'profile']);
 
         // SEARCH
         if ($request->search) {
@@ -58,12 +82,27 @@ class AdminController extends Controller
             $query->where('role_id', $request->role_id);
         }
 
-        $users = $query->orderBy('id', 'desc')->get();
+        $users = $query->orderBy('user_id', 'desc')->get();
+
+        // Siapkan data untuk Alpine.js (hindari closure di Blade @json)
+        $usersJson = $users->map(function ($u) {
+            $profile   = $u->profile;
+            $photoPath = $profile ? $profile->photo : null;
+            $hasPhoto  = $photoPath && file_exists(public_path('storage/' . $photoPath));
+            return [
+                'user_id'   => $u->user_id,
+                'name'      => $u->name ?? '',
+                'email'     => $u->email ?? '',
+                'role_name' => $u->role_name ?? 'Pengunjung',
+                'instansi'  => $profile ? $profile->instansi : null,
+                'photo_url' => $hasPhoto ? asset('storage/' . $photoPath) : null,
+            ];
+        })->values()->toArray();
 
         // Ambil roles dari database
         $roles = Role::orderBy('role_name')->get();
 
-        return view('layouts.admin.kelolapengguna', compact('users', 'roles'));
+        return view('layouts.admin.kelolapengguna', compact('users', 'usersJson', 'roles'));
     }
 
     // ===============================
@@ -86,7 +125,6 @@ class AdminController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role_id' => $role->role_id,
-            'role_name' => $role->role_name,
             'status' => 'aktif'
         ]);
 
@@ -103,7 +141,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
+            'email' => 'required|email|unique:users,email,' . $id . ',user_id',
             'role_name' => 'required|exists:roles,role_name',
             'password' => 'nullable|min:6'
         ]);
@@ -160,28 +198,49 @@ class AdminController extends Controller
     public function profile()
     {
         $user = auth()->user();
-        return view('layouts.admin.adminnav', compact('user'));
+        $profile = $user->profile ?? new \App\Models\Profile(['user_id' => $user->user_id]);
+        return view('layouts.admin.profile', compact('user', 'profile'));
     }
 
     public function updateProfile(Request $request, $id)
     {
         $validated = $request->validate([
-            'name' => 'required|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'password' => 'nullable|min:6'
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email,' . $id . ',user_id',
+            'alamat'   => 'nullable|string|max:500',
+            'no_hp'    => 'nullable|string|max:20',
+            'bio'      => 'nullable|string|max:1000',
+            'photo'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         $user = User::findOrFail($id);
-
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
         ]);
 
-        if ($request->filled('password')) {
-            $user->password = Hash::make($validated['password']);
-            $user->save();
+        $profileData = [
+            'instansi' => $validated['name'],
+            'alamat'   => $validated['alamat'] ?? null,
+            'no_hp'    => $validated['no_hp'] ?? null,
+            'bio'      => $validated['bio'] ?? null,
+        ];
+
+        if ($request->hasFile('photo')) {
+            $existingProfile = $user->profile;
+            if ($existingProfile && $existingProfile->photo) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($existingProfile->photo);
+            }
+            $file = $request->file('photo');
+            $fileName = 'profile_photos/' . $user->user_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('profile_photos', $user->user_id . '_' . time() . '.' . $file->getClientOriginalExtension(), 'public');
+            $profileData['photo'] = $fileName;
         }
+
+        \App\Models\Profile::updateOrCreate(
+            ['user_id' => $user->user_id],
+            $profileData
+        );
 
         return redirect()->route('admin.profile')->with('success', 'Profil berhasil diperbarui');
     }

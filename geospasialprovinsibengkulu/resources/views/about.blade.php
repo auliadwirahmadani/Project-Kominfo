@@ -39,10 +39,10 @@
     ========================= */
     .hero {
         position: relative;
-        padding: 4rem 1rem 6rem;
+        padding: 2rem 1rem 2rem;
         background: linear-gradient(135deg, #fef2f2 0%, #fff 50%, #fef2f2 100%);
         overflow: hidden;
-        min-height: 100vh;
+        min-height: auto;
         display: flex;
         align-items: center;
     }
@@ -67,11 +67,11 @@
 
     .hero-grid {
         position: relative;
-        max-width: 1400px;
+        max-width: 1200px;
         margin: 0 auto;
         display: grid;
         grid-template-columns: 1fr;
-        gap: 3rem;
+        gap: 1.5rem;
         align-items: center;
     }
 
@@ -86,7 +86,7 @@
         -webkit-backdrop-filter: blur(20px);
         border: 1px solid var(--glass-border);
         border-radius: var(--radius-lg);
-        padding: 2.5rem;
+        padding: 1.5rem 2rem;
         box-shadow: var(--shadow-xl);
         position: relative;
         z-index: 2;
@@ -115,11 +115,11 @@
     .hero-badge svg { width: 1rem; height: 1rem; }
 
     .hero-title {
-        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-size: clamp(1.75rem, 4vw, 2.75rem);
         font-weight: 800;
         color: var(--secondary);
         line-height: 1.1;
-        margin-bottom: 1.25rem;
+        margin-bottom: 0.75rem;
         background: linear-gradient(135deg, var(--secondary) 0%, var(--primary-dark) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -127,10 +127,10 @@
     }
 
     .hero-desc {
-        font-size: clamp(1rem, 2.5vw, 1.125rem);
+        font-size: clamp(0.95rem, 2vw, 1rem);
         color: #4b5563;
-        line-height: 1.7;
-        margin-bottom: 2rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
         max-width: 600px;
     }
 
@@ -147,15 +147,15 @@
         gap: 1rem;
         padding: 1rem 1.25rem;
         background: white;
-        border: 1px solid #f3f4f6;
+        border: 1px solid var(--primary-light);
         border-radius: 14px;
         transition: var(--transition);
         cursor: default;
     }
 
     .feature-item:hover {
-        border-color: var(--primary-light);
-        box-shadow: var(--shadow-md);
+        border-color: var(--primary);
+        box-shadow: 0 8px 24px -5px rgba(239, 68, 68, 0.25);
         transform: translateX(4px);
     }
 
@@ -250,7 +250,7 @@
     .hero-image-wrapper {
         position: relative;
         width: 100%;
-        max-width: 500px;
+        max-width: 400px;
     }
 
     .hero-image-wrapper::before {
@@ -372,7 +372,7 @@
 
     .vision-card {
         background: var(--glass);
-        border: 1px solid var(--glass-border);
+        border: 1px solid var(--primary-light);
         border-radius: var(--radius);
         padding: 2rem;
         box-shadow: var(--shadow-md);
@@ -395,7 +395,7 @@
 
     .vision-card:hover {
         transform: translateY(-6px);
-        box-shadow: var(--shadow-xl);
+        box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.3);
         border-color: var(--primary);
     }
 
@@ -514,7 +514,7 @@
         border-radius: var(--radius);
         padding: 2rem;
         text-align: center;
-        border: 1px solid #f3f4f6;
+        border: 1px solid var(--primary-light);
         transition: var(--transition);
         position: relative;
         overflow: hidden;
@@ -535,8 +535,8 @@
 
     .team-card:hover {
         transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
-        border-color: var(--primary-light);
+        box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.3);
+        border-color: var(--primary);
     }
 
     .team-card:hover::before { transform: scaleX(1); }
@@ -728,6 +728,151 @@
             --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
         }
     }
+
+    /* =========================
+       🏛️ PRODUSEN SECTION
+    ========================= */
+    .produsen-section {
+        padding: 5rem 1rem;
+        background: white;
+        position: relative;
+    }
+
+    .produsen-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 1200px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
+    }
+
+    .produsen-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .produsen-card {
+        background: white;
+        border-radius: var(--radius);
+        padding: 2rem 1.5rem;
+        text-align: center;
+        border: 1px solid var(--primary-light);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .produsen-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: var(--primary-gradient);
+        transform: scaleX(0);
+        transition: var(--transition);
+        transform-origin: left;
+    }
+
+    .produsen-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 28px -5px rgba(239, 68, 68, 0.28);
+        border-color: var(--primary);
+    }
+
+    .produsen-card:hover::before { transform: scaleX(1); }
+
+    .produsen-avatar {
+        width: 90px;
+        height: 90px;
+        margin: 0 auto 1.25rem;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 4px solid white;
+        box-shadow: 0 4px 16px rgba(239,68,68,0.2);
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .produsen-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .produsen-avatar-fallback {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        margin: 0 auto 1.25rem;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: white;
+        border: 4px solid white;
+        box-shadow: 0 4px 16px rgba(239,68,68,0.2);
+    }
+
+    .produsen-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .produsen-instansi {
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .produsen-bio {
+        color: #6b7280;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .produsen-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.75rem;
+        background: var(--primary-light);
+        color: var(--primary-dark);
+        font-size: 0.7rem;
+        font-weight: 700;
+        border-radius: 50px;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .produsen-empty {
+        text-align: center;
+        padding: 3rem;
+        color: #9ca3af;
+    }
+
+    .produsen-empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.4;
+    }
 </style>
 
 <!-- =========================
@@ -906,36 +1051,6 @@
         
         <div class="team-grid">
             
-            <!-- Member 1 -->
-            <div class="team-card animate-on-scroll">
-                <div class="team-avatar">KH</div>
-                <h4 class="team-name">Kusmana H. Wirawan</h4>
-                <p class="team-role">Kepala Tim Teknis</p>
-                <p class="team-desc">
-                    Ahli GIS dengan pengalaman 10+ tahun dalam pengelolaan data spasial 
-                    dan pengembangan sistem informasi geografis.
-                </p>
-                <div class="team-social">
-                    <a href="#" aria-label="Email">✉️</a>
-                    <a href="#" aria-label="LinkedIn">in</a>
-                </div>
-            </div>
-            
-            <!-- Member 2 -->
-            <div class="team-card animate-on-scroll">
-                <div class="team-avatar">DS</div>
-                <h4 class="team-name">Dr. Sari Dewi, M.Si</h4>
-                <p class="team-role">Analis Data Spasial</p>
-                <p class="team-desc">
-                    Spesialis analisis spasial dan pemodelan lingkungan untuk 
-                    mendukung perencanaan pembangunan berkelanjutan.
-                </p>
-                <div class="team-social">
-                    <a href="#" aria-label="Email">✉️</a>
-                    <a href="#" aria-label="LinkedIn">in</a>
-                </div>
-            </div>
-            
             <!-- Member 3 -->
             <div class="team-card animate-on-scroll">
                 <div class="team-avatar">AD</div>
@@ -951,23 +1066,87 @@
                 </div>
             </div>
             
-            <!-- Member 4 -->
-            <div class="team-card animate-on-scroll">
-                <div class="team-avatar">MR</div>
-                <h4 class="team-name">Maya Sari, S.IP</h4>
-                <p class="team-role">Koordinator Publik</p>
-                <p class="team-desc">
-                    Mengelola komunikasi publik, pelatihan pengguna, dan 
-                    layanan bantuan untuk memastikan aksesibilitas optimal.
-                </p>
-                <div class="team-social">
-                    <a href="#" aria-label="Email">✉️</a>
-                    <a href="#" aria-label="WhatsApp">💬</a>
-                </div>
-            </div>
-            
         </div>
         
+    </div>
+</section>
+
+
+
+<!-- =========================
+   🏛️ PRODUSEN DATA SECTION
+========================= -->
+<section class="produsen-section">
+    <div class="container mx-auto px-4">
+
+        <div class="section-header animate-on-scroll">
+            <span class="section-badge">🏛️ Kontributor</span>
+            <h2 class="section-title">Produsen Data Geospasial</h2>
+            <p class="section-desc">
+                Instansi-instansi pemerintah Provinsi Bengkulu yang berkontribusi
+                menghasilkan dan menyediakan data geospasial di platform ini.
+            </p>
+        </div>
+
+        @if(isset($producens) && $producens->count() > 0)
+            <div class="produsen-grid">
+                @foreach($producens as $produsen)
+                    @php
+                        $pProfile  = $produsen->profile;
+                        $photoPath = $pProfile?->photo;
+                        $hasPhoto  = $photoPath && file_exists(public_path('storage/' . $photoPath));
+                        $initial   = strtoupper(substr($produsen->name ?? 'P', 0, 1));
+                    @endphp
+                    <div class="produsen-card animate-on-scroll">
+
+                        {{-- Avatar --}}
+                        @if($hasPhoto)
+                            <div class="produsen-avatar">
+                                <img
+                                    src="{{ asset('storage/' . $photoPath) }}"
+                                    alt="{{ $produsen->name }}"
+                                    loading="lazy"
+                                >
+                            </div>
+                        @else
+                            <div class="produsen-avatar-fallback">{{ $initial }}</div>
+                        @endif
+
+                        {{-- Badge role --}}
+                        <span class="produsen-badge">📊 Produsen Data</span>
+
+                        {{-- Nama --}}
+                        <h3 class="produsen-name">{{ $produsen->name }}</h3>
+
+                        {{-- Instansi --}}
+                        @if($pProfile?->instansi)
+                            <p class="produsen-instansi">
+                                <svg xmlns="http://www.w3.org/2000/svg" style="display:inline;width:14px;height:14px;vertical-align:-2px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                                {{ $pProfile->instansi }}
+                            </p>
+                        @else
+                            <p class="produsen-instansi" style="color:#9ca3af;font-style:italic;">Instansi belum diisi</p>
+                        @endif
+
+                        {{-- Bio --}}
+                        @if($pProfile?->bio)
+                            <p class="produsen-bio">{{ $pProfile->bio }}</p>
+                        @else
+                            <p class="produsen-bio" style="font-style:italic;color:#d1d5db;">Belum ada deskripsi.</p>
+                        @endif
+
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="produsen-empty animate-on-scroll">
+                <div class="produsen-empty-icon">🏛️</div>
+                <p style="font-size:1rem;font-weight:600;">Belum ada produsen data yang terdaftar.</p>
+            </div>
+        @endif
+
     </div>
 </section>
 
@@ -999,9 +1178,9 @@
             </div>
             
             <div class="stat-card animate-on-scroll">
-                <div class="stat-icon">📥</div>
-                <span class="stat-value" data-target="{{ $totalUnduhan ?? 0 }}">0</span>
-                <span class="stat-label">Total Akses/Unduhan</span>
+                <div class="stat-icon">📄</div>
+                <span class="stat-value" data-target="{{ $totalMetadata ?? 0 }}">0</span>
+                <span class="stat-label">Metadata Tersedia</span>
             </div>
             
         </div>

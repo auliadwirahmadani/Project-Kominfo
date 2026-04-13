@@ -21,13 +21,19 @@ Route::get('/', [MapController::class, 'index'])->name('geo');
 
 // About Page
 Route::get('/about', function () {
-    $totalLayers = \App\Models\GeospatialLayer::where('is_published', 1)->where('status_verifikasi', 'approved')->count();
+    $totalLayers  = \App\Models\GeospatialLayer::where('is_published', 1)->where('status_verifikasi', 'approved')->count();
     $totalKategori = \App\Models\Category::count();
     $totalPengguna = \App\Models\User::count();
-    $totalUnduhan = 5421; // Dummy data representatif karena belum ada tabel log unduhan
+    $totalMetadata  = \App\Models\MetadataLayer::count();
 
-    return view('about', compact('totalLayers', 'totalKategori', 'totalPengguna', 'totalUnduhan'));
+    // Ambil semua produsen data beserta profil dan foto mereka
+    $producens = \App\Models\User::with('profile')
+        ->whereHas('role', fn($q) => $q->where('role_name', 'produsen'))
+        ->get();
+
+    return view('about', compact('totalLayers', 'totalKategori', 'totalPengguna', 'totalMetadata', 'producens'));
 })->name('about');
+
 
 Route::get('/debug-role', function() {
     $user = \App\Models\User::where('email', 'produsendiskominfotik@gmail.com')->first();
@@ -45,6 +51,9 @@ Route::get('/dataset', [GeospatialController::class, 'katalogDataset'])->name('d
 
 // ✅ 2. Detail Dataset (Halaman Detail Maroon-Kuning)
 Route::get('/dataset/{id}', [GeospatialController::class, 'showDetail'])->name('dataset.show');
+
+// ✅ 3. Detail Instansi (Katalog Peta per OPD)
+Route::get('/instansi/{id}', [GeospatialController::class, 'showInstansi'])->name('instansi.show');
 
 // GeoJSON Public (Mini Map) - Route ini HARUS sebelum /geospatial/filter
 Route::get('/geospatial/{id}/geojson', [GeospatialController::class, 'getGeoJson'])
@@ -148,6 +157,14 @@ Route::prefix('verifikator')
         Route::post('/metadata/{id}/verify', [VerifikatorController::class, 'processMetadataVerification'])
             ->name('metadata.verify.process');
 
+        // Profile Verifikator
+        Route::get('/profile', [VerifikatorController::class, 'profile'])->name('profile');
+        Route::put('/profile/update', [VerifikatorController::class, 'updateProfile'])->name('profile.update');
+
+        // Verifikasi Profil Produsen
+        Route::get('/verifikasi-profil', [VerifikatorController::class, 'verifikasiProfilIndex'])->name('verifikasiprofil.index');
+        Route::post('/verifikasi-profil/{id}', [VerifikatorController::class, 'processProfilVerification'])->name('verifikasiprofil.process');
+
     });
 
 
@@ -180,5 +197,9 @@ Route::prefix('produsen')
         Route::get('/metadata', [ProdusenController::class, 'metadata'])->name('metadata.index');
         Route::post('/metadata', [ProdusenController::class, 'storeMetadata'])->name('metadata.store');
         Route::put('/metadata/{id}', [ProdusenController::class, 'updateMetadata'])->name('metadata.update');
+
+        // Profil Produsen
+        Route::get('/profile', [ProdusenController::class, 'showProfile'])->name('profile');
+        Route::post('/profile', [ProdusenController::class, 'updateProfile'])->name('profile.update');
 
     });

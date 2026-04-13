@@ -1,4 +1,4 @@
-@extends('layouts.geonav')
+﻿@extends('layouts.geonav')
 
 @section('content')
 
@@ -246,7 +246,7 @@ window.loadMapData = function(layersData) {
                         var regionName = props.NAMOBJ || props.Name || props.name || "Area Terpilih";
 
                         // ====================================================
-                        // 🚀 POPUP KONTEN (TEMA MERAH PUTIH)
+                        // ­ƒÜÇ POPUP KONTEN (TEMA MERAH PUTIH)
                         // ====================================================
                         let popupHTML = `
                             <div class="w-full">
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
     osm.addTo(map);
 
     L.control.zoom({ position: 'topright' }).addTo(map);
-    L.control.layers({ "🗺️ Peta Dasar": osm, "🛰️ Citra Satelit": satellite }, null, { position: 'topright' }).addTo(map);
+    L.control.layers({ "­ƒù║´©Å Peta Dasar": osm, "­ƒø░´©Å Citra Satelit": satellite }, null, { position: 'topright' }).addTo(map);
     L.control.locate({ position: 'topright', flyTo: true, keepCurrentZoomLevel: true, locateOptions: { enableHighAccuracy: true }, showCompass: true }).addTo(map);
 
     var miniLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
@@ -345,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var info = L.control({ position: 'bottomright' });
     info.onAdd = function () {
         this._div = L.DomUtil.create('div', 'info-control');
-        this._div.innerHTML = `<div style="font-size:11px;margin-bottom:4px;">Gerakkan mouse</div><div><b>🕒</b> <span id="map-time">-</span><br><b>📍</b> <span id="map-coords">Lat: -, Lng: -</span></div>`;
+        this._div.innerHTML = `<div style="font-size:11px;margin-bottom:4px;">Gerakkan mouse</div><div><b>­ƒòÉ</b> <span id="map-time">-</span><br><b>­ƒôì</b> <span id="map-coords">Lat: -, Lng: -</span></div>`;
         return this._div;
     };
     info.addTo(map);

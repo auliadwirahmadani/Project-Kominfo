@@ -165,15 +165,15 @@
         border-radius: var(--radius);
         overflow: hidden;
         box-shadow: var(--shadow-sm);
-        border: 1px solid #f3f4f6;
+        border: 1px solid var(--primary-light); /* Red outline */
         transition: var(--transition);
         display: flex;
         flex-direction: column;
     }
     .catalog-card:hover {
         transform: translateY(-6px);
-        box-shadow: var(--shadow-lg);
-        border-color: var(--primary-light);
+        box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.3); /* Red glow shadow */
+        border-color: var(--primary); /* Stronger red hover outline */
     }
     .card-image {
         position: relative;
@@ -248,6 +248,25 @@
         color: var(--primary);
     }
     .stat-label { color: #4b5563; font-weight: 500; }
+
+    /* =========================
+       ✨ DECORATIVE BLOBS
+    ========================= */
+    @keyframes float1 {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(40px, -60px) scale(1.1); }
+        66% { transform: translate(-30px, 30px) scale(0.9); }
+        100% { transform: translate(0, 0) scale(1); }
+    }
+    @keyframes float2 {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(-50px, 40px) scale(1.15); }
+        66% { transform: translate(30px, -30px) scale(0.85); }
+        100% { transform: translate(0, 0) scale(1); }
+    }
+    .blob-1 { animation: float1 18s infinite ease-in-out; }
+    .blob-2 { animation: float2 22s infinite ease-in-out; }
+    .blob-3 { animation: float1 25s infinite ease-in-out reverse; }
 </style>
 
 <!-- =========================
@@ -281,11 +300,17 @@
 <!-- =========================
    🔍 CATALOG SECTION
 ========================= -->
-<section id="katalog" class="container mx-auto px-4 py-8">
+<section id="katalog" class="relative py-12 overflow-hidden mb-16">
+    <!-- Hiasan Rona Merah Animatif -->
+    <div class="absolute top-10 left-[-5%] w-[40vw] h-[40vw] max-w-[500px] bg-red-400/20 rounded-full mix-blend-multiply filter blur-[100px] blob-1 pointer-events-none z-0"></div>
+    <div class="absolute bottom-10 right-[-5%] w-[35vw] h-[35vw] max-w-[400px] bg-rose-500/20 rounded-full mix-blend-multiply filter blur-[120px] blob-2 pointer-events-none z-0"></div>
+    <div class="absolute top-1/3 left-1/2 w-[25vw] h-[25vw] max-w-[300px] bg-red-600/10 rounded-full mix-blend-multiply filter blur-[90px] blob-3 pointer-events-none z-0 hidden md:block"></div>
+
+    <div class="container mx-auto px-4 relative z-10">
 
     {{-- ===== FILTER BAR ===== --}}
     <form action="{{ route('catalog') }}" method="GET" id="filterForm">
-    <div class="flex flex-wrap items-center gap-3 mb-6 p-3 bg-white rounded-2xl shadow-sm border border-gray-100" style="overflow: visible;">
+    <div class="flex flex-wrap items-center gap-3 mb-6 p-3 bg-white rounded-2xl shadow-sm border border-gray-100 relative" style="overflow: visible; z-index: 9999;">
 
         {{-- Search Input (Vanilla JS) --}}
         <div class="flex-1 min-w-[200px] relative" id="catalogSearchWrapper">
@@ -410,7 +435,7 @@
     </form>
 
     <!-- ✅ Cards Grid -->
-    <div class="catalog-grid" id="catalogGrid">
+    <div class="catalog-grid relative z-0" id="catalogGrid">
         @forelse($datasets as $data)
         <article class="catalog-card">
             
@@ -486,6 +511,56 @@
         {{ $datasets->links() }}
     </div>
     @endif
+    
+    </div> <!-- End Container wrapper -->
+</section>
+
+<!-- =========================
+   🏛️ INSTANSI / PRODUSEN DATA
+========================= -->
+<section class="py-16 bg-white relative">
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-extrabold text-gray-800 tracking-tight">Produsen Data Geospasial</h2>
+            <p class="text-gray-500 mt-2">Instansi pemerintah yang berkontribusi pada Geoportal Bengkulu</p>
+        </div>
+
+        @if(isset($producens) && $producens->count() > 0)
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            @foreach($producens as $p)
+                @php
+                    $profile = $p->profile;
+                    $photoPath = $profile?->photo;
+                    $hasPhoto = $photoPath && file_exists(public_path('storage/' . $photoPath));
+                    $initial = strtoupper(substr($p->name ?? 'P', 0, 1));
+                @endphp
+                
+                <a href="{{ route('instansi.show', $p->user_id) }}" class="group block bg-gray-50 hover:bg-red-50 border border-gray-100 rounded-2xl p-6 text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-red-200">
+                    <div class="w-20 h-20 mx-auto rounded-full shadow-inner mb-4 overflow-hidden border-4 border-white bg-white group-hover:border-red-100 transition-colors flex items-center justify-center">
+                        @if($hasPhoto)
+                            <img src="{{ asset('storage/' . $photoPath) }}" alt="{{ $p->name }}" class="w-full h-full object-cover">
+                        @else
+                            <span class="text-2xl font-bold text-red-500">{{ $initial }}</span>
+                        @endif
+                    </div>
+                    <h4 class="font-bold text-gray-800 text-lg group-hover:text-red-600 transition-colors line-clamp-2">
+                        {{ $profile?->instansi ?? $p->name }}
+                    </h4>
+                    <p class="text-sm text-gray-500 mt-2 line-clamp-2">{{ $profile?->bio ?? 'Penyedia data geospasial.' }}</p>
+                    
+                    <div class="mt-4 inline-flex items-center text-red-500 font-semibold text-sm group-hover:text-red-700">
+                        Lihat Selengkapnya <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+        @else
+        <div class="text-center py-10 text-gray-400">
+            <svg class="w-16 h-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            <p>Belum ada instansi terdaftar.</p>
+        </div>
+        @endif
+    </div>
 </section>
 
 <!-- =========================
@@ -494,23 +569,35 @@
 <section class="stats-section">
     <div class="container mx-auto px-4">
         <div class="stats-header">
-            <h2 class="stats-title">🎯 Pencapaian Geoportal Bengkulu</h2>
+            <h2 class="stats-title">Pencapaian Geoportal Bengkulu</h2>
             <p class="stats-desc">Komitmen kami dalam menyediakan data geospasial berkualitas.</p>
         </div>
         <div class="stats-grid">
             <div class="stat-card">
+                <div class="mx-auto w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 shadow-sm border border-red-100">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
                 <div class="stat-value" data-target="{{ $totalKategori ?? 0 }}">0</div>
                 <div class="stat-label">Kategori Data</div>
             </div>
             <div class="stat-card">
+                <div class="mx-auto w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 shadow-sm border border-red-100">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                </div>
                 <div class="stat-value" data-target="{{ $totalPeta ?? 0 }}">0</div>
                 <div class="stat-label">Peta Aktif</div>
             </div>
             <div class="stat-card">
+                <div class="mx-auto w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 shadow-sm border border-red-100">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </div>
                 <div class="stat-value" data-target="{{ $totalPengguna ?? 0 }}">0</div>
                 <div class="stat-label">Pengguna</div>
             </div>
             <div class="stat-card">
+                <div class="mx-auto w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 shadow-sm border border-red-100">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
                 <div class="stat-value" data-target="{{ $totalInstansi ?? 0 }}">0</div>
                 <div class="stat-label">Instansi Mitra</div>
             </div>
