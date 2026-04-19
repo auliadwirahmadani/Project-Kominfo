@@ -53,6 +53,8 @@ class GeospatialController extends Controller
         try {
             DB::beginTransaction();
 
+            $fileSize = $file->getSize();
+            // Original filename logic
             $fileName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), '_') . '_' . time() . '.' . $extension;
             $filePath = $file->storeAs('geospatial', $fileName, 'public');
 
@@ -66,7 +68,7 @@ class GeospatialController extends Controller
                 'file_path'          => $filePath,
                 'file_original_name' => $file->getClientOriginalName(),
                 'file_type'          => $extension,
-                'file_size'          => $file->getSize(),
+                'file_size'          => $fileSize,
                 'file_mime'          => $file->getMimeType(),
             ]);
 
@@ -105,9 +107,9 @@ class GeospatialController extends Controller
                 if ($layer->file_path) Storage::disk('public')->delete($layer->file_path);
                 
                 $file = $request->file('geospatial_file');
+                $data['file_size'] = $file->getSize(); // Ambil size sebelum di move
                 $data['file_path'] = $file->store('geospatial', 'public');
                 $data['file_type'] = $file->getClientOriginalExtension();
-                $data['file_size'] = $file->getSize();
             }
 
             $layer->update($data);
@@ -142,7 +144,7 @@ class GeospatialController extends Controller
             if (!file_exists($fullPath)) return response()->json(['error' => 'File tidak ditemukan'], 404);
 
             if (strtolower($layer->file_type) === 'zip') {
-                return response()->json(['is_shapefile' => true, 'url' => asset('storage/' . $layer->file_path)]);
+                return response()->json(['is_shapefile' => true, 'url' => Storage::url($layer->file_path)]);
             }
 
             return response()->json(json_decode(file_get_contents($fullPath), true));
@@ -172,7 +174,7 @@ class GeospatialController extends Controller
     // Menampilkan HALAMAN KATALOG (Grid, Filter, & Statistik) -> view catalog.blade.php
     public function katalogDataset(Request $request)
     {
-        $query = GeospatialLayer::with(['metadata', 'category'])
+        $query = GeospatialLayer::with(['metadata', 'category', 'user.profile'])
                     ->where('status_verifikasi', 'approved')
                     ->where('is_published', 1);
 
@@ -206,8 +208,8 @@ class GeospatialController extends Controller
             });
         }
 
-        // Ambil data peta (paginate 9 per halaman)
-        $datasets = $query->latest()->paginate(9)->withQueryString();
+        // Ambil data peta (paginate 12 per halaman, format 3 baris x 4 card)
+        $datasets = $query->latest()->paginate(12)->withQueryString();
 
         // 3. Ambil data untuk Statistik di bawah halaman
         $totalPeta       = GeospatialLayer::where('is_published', 1)->where('status_verifikasi', 'approved')->count();

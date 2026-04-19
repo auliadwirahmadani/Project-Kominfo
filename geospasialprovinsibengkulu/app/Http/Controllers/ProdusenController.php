@@ -73,7 +73,7 @@ class ProdusenController extends Controller
             $fileName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), '_') . '_' . time() . '.' . $extension;
             $filePath = $file->storeAs('geospatial', $fileName, 'public');
 
-            GeospatialLayer::create([
+            $layer = GeospatialLayer::create([
                 'user_id'           => auth()->id(),
                 'layer_name'        => $validated['layer_name'],
                 'category_id'       => $validated['category_id'],
@@ -86,6 +86,11 @@ class ProdusenController extends Controller
                 'file_size'         => $file->getSize(),
                 'file_mime'         => $file->getMimeType(),
             ]);
+
+            // PostGIS Parsing
+            if (in_array($extension, ['json', 'geojson'])) {
+                $this->parseAndInsertGeoJson($layer->geospatial_id, Storage::disk('public')->path($filePath));
+            }
 
             return redirect()->route('produsen.geospasial.index')->with('success', '✅ Data berhasil dikirim untuk diverifikasi!');
         } catch (\Exception $e) {
@@ -130,6 +135,12 @@ class ProdusenController extends Controller
         }
 
         $layer->update($data);
+
+        // Parse ulang data jika ada file geojson baru yang diupload
+        if ($request->hasFile('geospatial_file') && in_array(strtolower($data['file_type']), ['json', 'geojson'])) {
+            $this->parseAndInsertGeoJson($layer->geospatial_id, Storage::disk('public')->path($data['file_path']));
+        }
+
         return redirect()->route('produsen.geospasial.index')->with('success', '✅ Data berhasil diupdate!');
     }
 
@@ -255,5 +266,55 @@ class ProdusenController extends Controller
         );
 
         return redirect()->route('produsen.profile')->with('success', '✅ Perubahan profil disimpan dan sedang menunggu verifikasi!');
+    }
+
+    /**
+     * Parse file GeoJSON dan Masukkan ke tabel layer_features via PostGIS
+     */
+    protected function parseAndInsertGeoJson($geospatial_id, $absolutePath)
+    {
+        try {
+            // Hapus isi fitur yang lama dari layer ini jika ada
+            DB::table('layer_features')->where('geospatial_id', $geospatial_id)->delete();
+
+            if (!file_exists($absolutePath)) return;
+
+            $content = file_get_contents($absolutePath);
+            $geoJson = json_decode($content, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::error('Invalid JSON file for geospatial_id ' . $geospatial_id);
+                return;
+            }
+
+            if (isset($geoJson['features']) && is_array($geoJson['features'])) {
+                foreach ($geoJson['features'] as $feature) {
+                    if (!isset($feature['geometry']) || empty($feature['geometry'])) continue;
+                    
+                    $geomJson = json_encode($feature['geometry']);
+                    $propsJson = isset($feature['properties']) ? json_encode($feature['properties']) : null;
+
+                    // Menggunakan ST_GeomFromGeoJSON untuk PostGIS
+                    DB::insert(
+                        "INSERT INTO layer_features (geospatial_id, properties, geom, created_at, updated_at) 
+                         VALUES (?, ?::jsonb, ST_GeomFromGeoJSON(?), NOW(), NOW())",
+                        [$geospatial_id, $propsJson, $geomJson]
+                    );
+                }
+            } elseif (isset($geoJson['type']) && $geoJson['type'] === 'Feature') {
+                 if (isset($geoJson['geometry'])) {
+                     $geomJson = json_encode($geoJson['geometry']);
+                     $propsJson = isset($geoJson['properties']) ? json_encode($geoJson['properties']) : null;
+                     
+                     DB::insert(
+                         "INSERT INTO layer_features (geospatial_id, properties, geom, created_at, updated_at) 
+                          VALUES (?, ?::jsonb, ST_GeomFromGeoJSON(?), NOW(), NOW())",
+                         [$geospatial_id, $propsJson, $geomJson]
+                     );
+                 }
+            }
+        } catch (\Exception $e) {
+            Log::error('Parsing GeoJSON PostGIS Error: ' . $e->getMessage());
+        }
     }
 }

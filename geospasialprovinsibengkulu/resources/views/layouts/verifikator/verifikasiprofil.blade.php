@@ -157,7 +157,7 @@
                                             <div class="text-sm font-semibold text-gray-600 line-through">{{ $user->name }}</div>
                                         </div>
                                         <div class="diff-arrow text-center text-violet-400">
-                                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"/></svg>
                                         </div>
                                         <div class="diff-box is-new shadow-sm">
                                             <div class="text-[10px] font-bold text-violet-600 uppercase mb-1">Nama Baru</div>
@@ -174,7 +174,7 @@
                                             <div class="text-sm font-semibold text-gray-600 line-through">{{ $profile->instansi ?? '-' }}</div>
                                         </div>
                                         <div class="diff-arrow text-center text-violet-400">
-                                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"/></svg>
                                         </div>
                                         <div class="diff-box is-new shadow-sm">
                                             <div class="text-[10px] font-bold text-violet-600 uppercase mb-1">Instansi Baru</div>
@@ -191,7 +191,7 @@
                                             <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded border border-gray-100 line-through opacity-70">{{ $profile->bio ?? '-' }}</div>
                                         </div>
                                         <div class="diff-arrow text-center text-violet-400">
-                                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"/></svg>
                                         </div>
                                         <div class="diff-box is-new shadow-sm">
                                             <div class="text-[10px] font-bold text-violet-600 uppercase mb-1">Deskripsi / Bio Baru</div>

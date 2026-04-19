@@ -10,8 +10,9 @@
     <meta name="description" content="@yield('meta_description', 'Platform Informasi Geospasial Resmi Provinsi Bengkulu')">
 
     {{-- Fonts --}}
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600|inter:400,500,600,700&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
 
     {{-- Leaflet (only loaded when needed) --}}
     @if($navMode ?? 'map' === 'map')
@@ -26,7 +27,7 @@
            BASE STYLES
         ========================================== */
         html, body {
-            font-family: 'Inter', 'Figtree', ui-sans-serif, system-ui, sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
         }
 
         /* ==========================================
@@ -50,14 +51,14 @@
         /* Navbar floating */
         body.map-mode #main-navbar {
             position: fixed;
-            top: 16px;
+            top: 14px;
             left: 50%;
             transform: translateX(-50%);
             width: 95vw;
             max-width: 1440px;
             border-radius: 9999px;
-            height: 64px;
-            box-shadow: 0 8px 32px -4px rgba(0,0,0,0.25);
+            height: 72px;
+            box-shadow: 0 12px 40px -6px rgba(153,27,27,0.5), 0 4px 16px rgba(0,0,0,0.2);
         }
 
         /* ==========================================
@@ -67,7 +68,8 @@
             position: sticky;
             top: 0;
             width: 100%;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+            height: 72px;
+            box-shadow: 0 4px 24px rgba(153,27,27,0.3), 0 1px 0 rgba(255,255,255,0.08);
         }
         body.normal-mode main {
             padding-top: 0;
@@ -78,16 +80,116 @@
         ========================================== */
         #main-navbar {
             z-index: 9999;
-            background: #b91c1c;
-            border: 1px solid #991b1b;
+            background: #8d1919;
+            border: 1.5px solid rgba(255,255,255,0.12);
+            border-bottom: 2.5px solid rgba(251,191,36,0.55);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 1rem;
+            padding: 0 1.5rem;
             overflow: visible !important;
+            backdrop-filter: blur(12px);
         }
         @media (min-width: 640px) {
-            #main-navbar { padding: 0 1.5rem; }
+            #main-navbar { padding: 0 2rem; }
+        }
+
+        /* Logo shine effect */
+        #navbar-logo-wrap {
+            position: relative;
+        }
+        #navbar-logo-img {
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.35));
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+        #navbar-logo-img:hover {
+            transform: scale(1.08) rotate(-2deg);
+            filter: drop-shadow(0 4px 14px rgba(0,0,0,0.45));
+        }
+
+        /* Nav menu item styles */
+        .nav-menu-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            letter-spacing: 0.02em;
+            color: rgba(255,255,255,0.85);
+            transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+            text-decoration: none;
+        }
+        .nav-menu-item:hover {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .nav-menu-item.active {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            box-shadow: 0 0 0 1.5px rgba(255,255,255,0.3), 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .nav-menu-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 3px;
+            background: #fbbf24;
+            border-radius: 9999px;
+        }
+
+        /* Brand text */
+        .navbar-brand-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 1rem;
+            color: #fff;
+            letter-spacing: 0.01em;
+            line-height: 1.2;
+        }
+        .navbar-brand-sub {
+            font-weight: 500;
+            font-size: 0.7rem;
+            color: rgba(254,202,202,0.9);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        /* Divider */
+        .navbar-divider {
+            width: 1.5px;
+            height: 32px;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.25), transparent);
+            border-radius: 9999px;
+        }
+
+        /* Login button */
+        .navbar-login-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.92);
+            color: #991b1b;
+            padding: 8px 18px;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.02em;
+            transition: all 0.22s ease;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+            border: 1.5px solid rgba(255,255,255,0.8);
+        }
+        .navbar-login-btn:hover {
+            background: #fff;
+            color: #7f1d1d;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.22);
         }
 
         /* Scrollbar custom */
@@ -109,20 +211,26 @@
 <nav id="main-navbar" role="navigation" aria-label="Main Navigation">
 
     {{-- ===== KIRI: Logo ===== --}}
-    <div class="flex items-center gap-3 shrink-0">
-        <a href="{{ route('geo') }}" class="flex items-center gap-2.5" aria-label="Beranda Geoportal">
-            <img src="{{ asset('Logo Provinsi Bengkulu.png') }}"
-                 alt="Logo Provinsi Bengkulu"
-                 class="w-8 h-8 object-contain"
-                 onerror="this.src='https://placehold.co/32x32/b91c1c/ffffff?text=G'">
-            <span class="text-white font-bold text-base tracking-wide hidden sm:block leading-tight">
-                Geoportal<br><span class="font-normal text-xs text-red-200 tracking-wider">Provinsi Bengkulu</span>
-            </span>
+    <div class="flex items-center gap-3 shrink-0" id="navbar-logo-wrap">
+        <a href="{{ route('geo') }}" class="flex items-center gap-3" aria-label="Beranda Geoportal">
+            {{-- Logo container dengan background circle --}}
+            <div class="relative">
+                <div class="absolute inset-0 rounded-full bg-white/15 blur-sm scale-110"></div>
+                <img src="{{ asset('Logo Provinsi Bengkulu.png') }}"
+                     alt="Logo Provinsi Bengkulu"
+                     id="navbar-logo-img"
+                     class="relative w-11 h-11 object-contain"
+                     onerror="this.src='https://placehold.co/44x44/b91c1c/ffffff?text=G'">
+            </div>
+            <div class="hidden sm:flex flex-col">
+                <span class="navbar-brand-title">Geoportal</span>
+                <span class="navbar-brand-sub">Provinsi Bengkulu</span>
+            </div>
         </a>
     </div>
 
     {{-- ===== TENGAH: Menu Desktop ===== --}}
-    <ul class="hidden md:flex items-center gap-6 lg:gap-8 text-white font-medium text-sm" role="menubar">
+    <ul class="hidden md:flex items-center gap-1 lg:gap-2" role="menubar">
         @php
             $currentRoute = request()->route()?->getName() ?? '';
         @endphp
@@ -135,11 +243,8 @@
         <li role="none">
             <a href="{{ route($item['route']) }}"
                role="menuitem"
-               class="flex items-center gap-1.5 py-1 border-b-2 transition-all duration-200
-                      {{ $currentRoute === $item['route']
-                          ? 'border-white text-white font-semibold'
-                          : 'border-transparent text-red-100 hover:text-white hover:border-white/50' }}">
-                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               class="nav-menu-item {{ $currentRoute === $item['route'] ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
                 </svg>
                 {{ $item['label'] }}
@@ -153,7 +258,8 @@
 
         {{-- Search + Filter (map mode only) --}}
         @if(($navMode ?? 'map') === 'map')
-        <div class="hidden lg:flex items-center gap-2 pl-3 border-l border-red-600/60">
+        <div class="hidden lg:flex items-center gap-3 pl-4">
+            <div class="navbar-divider"></div>
 
             {{-- Layer Search Dropdown (Vanilla JS) --}}
             <div class="relative w-64 xl:w-72" id="navSearchWrapper">
@@ -312,10 +418,9 @@
 
         {{-- Tombol Login — hanya tampil jika belum login (pengunjung) --}}
         @guest
-            <a href="{{ route('login') }}"
-               class="flex items-center gap-1.5 bg-white text-red-700 px-4 py-1.5 rounded-full font-semibold text-sm hover:bg-red-50 transition shadow-sm">
+            <a href="{{ route('login') }}" class="navbar-login-btn">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                 </svg>
                 Masuk
             </a>
@@ -540,12 +645,12 @@ window.terapkanFilterMobile = function() {
         if (panel) panel.style.display = 'none';
         var clearBox = document.getElementById('navSearchClearBox');
         if (clearBox) clearBox.style.display = 'block';
-        fetch('/geospatial/filter?id=' + layer.id)
-            .then(function(r){ return r.json(); })
-            .then(function(data){
-                if (typeof window.loadMapData === 'function')
-                    window.loadMapData(Array.isArray(data) ? data : (data.layers || []));
-            });
+        
+        // Pass to the new PostGIS arch dynamic fetching API
+        window.activeSearchLayerId = id;
+        if (typeof window.loadMapData === 'function') {
+            window.loadMapData();
+        }
     };
 
     window.navSearchClear = function() {
@@ -554,6 +659,9 @@ window.terapkanFilterMobile = function() {
         if (label) label.textContent = 'Cari data layer...';
         var clearBox = document.getElementById('navSearchClearBox');
         if (clearBox) clearBox.style.display = 'none';
+        
+        // Clear filter
+        window.activeSearchLayerId = null;
         window.terapkanFilterPeta();
     };
 

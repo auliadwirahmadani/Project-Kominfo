@@ -50,4 +50,19 @@ class GeospatialLayer extends Model
     {
         return $this->hasOne(MetadataLayer::class, 'geospatial_id', 'geospatial_id');
     }
+
+    // Accessor: Ambil ekstensi dari file_path karena kolom file_type tidak ada di DB
+    public function getFileTypeAttribute()
+    {
+        return $this->file_path ? pathinfo($this->file_path, PATHINFO_EXTENSION) : null;
+    }
+
+    // Accessor: Ambil ukuran file (dummy atau bisa di cek existensi file jika perlu)
+    public function getFileSizeAttribute()
+    {
+        if ($this->file_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->file_path)) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->size($this->file_path);
+        }
+        return 0; // Return 0 jika tidak ketemu
+    }
 }

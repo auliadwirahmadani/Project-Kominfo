@@ -24,7 +24,7 @@
         }
 
         .sidebar-glass {
-            background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%);
+            background: #8d1919;
             backdrop-filter: blur(10px);
             box-shadow:
                 0 0 0 1px rgba(255,255,255,0.05),
@@ -62,9 +62,20 @@
         }
 
         .topbar-glass {
-            background: rgba(255,255,255,0.7);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            background: #8d1919;
+            backdrop-filter: blur(12px);
+            border-bottom: 2.5px solid rgba(251,191,36,0.5);
+            box-shadow: 0 4px 24px rgba(127,29,29,0.35), 0 1px 0 rgba(255,255,255,0.06);
+        }
+        .topbar-glass h2 {
+            color: #fff !important;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        .topbar-glass button i {
+            color: rgba(255,255,255,0.8);
+        }
+        .topbar-glass button:hover i {
+            color: #fff;
         }
 
         .content-card {
@@ -119,15 +130,16 @@
         <!-- LOGO -->
         <div class="h-20 flex items-center px-6 border-b border-white/10">
             <a href="{{ route('geo') }}" class="flex items-center gap-3 logo-hover">
-                <!-- ✅ Logo dengan fallback & tanpa spasi di nama file -->
-                <img src="{{ asset('logo provinsi bengkulu.png') }}"
-                     alt="Logo Geoportal"
-                     class="h-10 w-auto object-contain"
-                     onerror="this.src='https://via.placeholder.com/40x40/991b1b/ffffff?text=G'">
-
-                <div class="leading-tight">
-                    <div class="text-xs text-red-200 tracking-wider uppercase">Geoportal</div>
-                    <div class="text-sm font-bold tracking-wide uppercase">Provinsi Bengkulu</div>
+                <div class="relative shrink-0">
+                    <div class="absolute inset-0 rounded-full bg-white/20 blur-sm scale-110"></div>
+                    <img src="{{ asset('Logo Provinsi Bengkulu.png') }}"
+                         alt="Logo Geoportal"
+                         class="relative w-10 h-10 object-contain drop-shadow-md"
+                         onerror="this.src='https://placehold.co/44x44/b91c1c/ffffff?text=G'">
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-extrabold text-[16px] text-white tracking-normal leading-tight font-sans">Geoportal</span>
+                    <span class="font-medium text-[11px] text-red-200 tracking-[0.08em] uppercase">Provinsi Bengkulu</span>
                 </div>
             </a>
 
@@ -240,15 +252,18 @@
     <main class="main-content flex-1 ml-64 flex flex-col min-h-screen">
 
         <!-- TOPBAR -->
-        <header class="h-16 topbar-glass flex items-center px-8 sticky top-0 z-30">
+        <header class="h-[72px] topbar-glass flex items-center px-8 sticky top-0 z-30">
             <!-- ✅ Toggle button mobile -->
-            <button onclick="toggleSidebar()" class="lg:hidden mr-4 text-gray-600 hover:text-gray-900">
+            <button onclick="toggleSidebar()" class="lg:hidden mr-4 hover:opacity-80 transition">
                 <i class="fas fa-bars text-xl"></i>
             </button>
 
-            <h2 class="text-xl font-bold text-gray-800">
-                @yield('page-title', 'Panel Admin')
-            </h2>
+            <div class="flex items-center gap-3">
+                <div class="w-1 h-6 bg-yellow-400/70 rounded-full"></div>
+                <h2 class="text-xl font-bold">
+                    @yield('page-title', 'Panel Admin')
+                </h2>
+            </div>
         </header>
 
         <!-- CONTENT -->

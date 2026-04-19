@@ -124,19 +124,27 @@
                     </h3>
                     <p class="text-xs text-gray-400 font-mono mt-1 mb-4">ID: {{ $data->geospatial_id }}</p>
 
-                    <div class="flex justify-between mt-auto grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase">Tahun</p>
-                            <p class="text-sm font-medium text-gray-700">
-                                {{ $data->metadata->year ?? $data->created_at->format('Y') }}
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase">Tipe Data</p>
-                            <p class="text-sm font-medium text-gray-700">
-                                {{ $data->metadata->data_type ?? 'Vektor' }}
-                            </p>
-                        </div>
+                    {{-- Badge Tahun & Tipe Data --}}
+                    <div class="flex flex-wrap gap-2 mt-1 mb-4">
+                        {{-- Badge Tahun --}}
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+                              style="background:#fef3c7; color:#92400e; border: 1px solid #fcd34d;">
+                            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            {{ $data->metadata->year ?? $data->created_at->format('Y') }}
+                        </span>
+
+                        {{-- Badge Tipe Data --}}
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+                              style="background:#ede9fe; color:#5b21b6; border: 1px solid #c4b5fd;">
+                            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                            {{ $data->metadata->data_type ?? 'Vektor' }}
+                        </span>
                     </div>
 
                     <a href="{{ route('dataset.show', ['id' => $data->geospatial_id]) }}"

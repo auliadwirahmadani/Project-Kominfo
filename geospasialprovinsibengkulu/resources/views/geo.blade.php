@@ -52,14 +52,72 @@ main, .py-4 {
 
 .leaflet-top.leaflet-right { top: 90px; right: 20px; }
 .leaflet-top.leaflet-right .leaflet-control { margin-bottom: 10px; }
-.leaflet-control-zoom a { background-color: #ef4444 !important; color: white !important; width: 40px !important; height: 40px !important; line-height: 40px !important; font-size: 18px !important; }
-.leaflet-control-layers-toggle { background-color: #ef4444 !important; background-image: none !important; }
-.leaflet-control-locate a { background-color: #3b82f6 !important; color: white !important; width: 40px !important; height: 40px !important; line-height: 40px !important; border-radius: 8px !important; }
+/* Silver Modern Theme for Leaflet Controls */
+.leaflet-control-zoom a, 
+.leaflet-control-layers-toggle, 
+.leaflet-control-locate a,
+.leaflet-control-layers {
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%) !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    transition: all 0.3s ease !important;
+}
+.leaflet-control-zoom a, .leaflet-control-locate a { 
+    width: 40px !important; 
+    height: 40px !important; 
+    line-height: 40px !important; 
+    font-size: 18px !important; 
+    border-radius: 8px !important; 
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+/* Memperbaiki radius zoom saat di-group */
+.leaflet-control-zoom { background: transparent !important; border: none !important; box-shadow: none !important; }
+.leaflet-control-zoom-in { border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; border-bottom: 1px solid #e2e8f0 !important; }
+.leaflet-control-zoom-out { border-top-left-radius: 0 !important; border-top-right-radius: 0 !important; border-top: none !important;}
+
+/* Interaksi Hover Sleek */
+.leaflet-control-zoom a:hover, 
+.leaflet-control-layers-toggle:hover, 
+.leaflet-control-locate a:hover {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+    color: #0f172a !important;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Memperbaiki ikon layers & compass agar tidak kepotong/hitam */
+.leaflet-control-layers-toggle { width: 40px !important; height: 40px !important; border-radius: 8px !important; }
 .leaflet-top.leaflet-left { top: 90px; left: 20px; }
 .leaflet-control-minimap { border-radius: 10px !important; border: 2px solid #ef4444 !important; }
 .leaflet-bottom.leaflet-left { left: 20px; bottom: 20px; }
 .leaflet-bottom.leaflet-right { right: 20px; bottom: 20px; }
-.info-control { background: rgba(31, 41, 55, 0.9); color: white; padding: 12px 16px; border-radius: 10px; font-size: 13px; }
+/* Info Control Kursor UI */
+.info-control { 
+    background: rgba(255, 255, 255, 0.95); 
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    padding: 14px 18px; 
+    border-radius: 16px; 
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+    font-family: 'Inter', sans-serif;
+    min-width: 250px;
+}
+.info-control-title {
+    font-size: 10px; text-transform: uppercase; font-weight: 700; color: #64748b; 
+    letter-spacing: 0.08em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+}
+.info-control-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 8px; color: #0f172a;
+}
+.info-control-row:last-child { margin-bottom: 0; }
+.info-icon-wrapper {
+    width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    background: #f1f5f9; color: #dc2626; shrink-0;
+}
+.info-value { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; font-weight: 600; }
 
 /* =========================
     STYLING CUSTOM POPUP MERAH PUTIH (METADATA)
@@ -160,6 +218,7 @@ main, .py-4 {
 
 <div id="map"></div>
 
+<script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
 <script>
 // ==========================================
 // 1. DEKLARASI FUNGSI PETA SUPER GLOBAL
@@ -167,155 +226,194 @@ main, .py-4 {
 function styleDefault() { return { color: "#b91c1c", weight: 3, fillColor: "#f87171", fillOpacity: 0.6 }; }
 function styleHover() { return { color: "#7f1d1d", weight: 4, fillColor: "#ef4444", fillOpacity: 0.8 }; }
 
-window.loadMapData = function(layersData) {
-    if (!window.map || !window.allGeoLayers) {
-        alert("Sistem Peta sedang dimuat, mohon tunggu sebentar.");
-        return;
-    }
+window.fetchDynamicLayers = function() {
+    if (!window.map || !window.allGeoLayers) return;
 
-    window.map.invalidateSize();
-    window.allGeoLayers.clearLayers();
+    var bounds = window.map.getBounds();
+    var minLng = bounds.getWest();
+    var minLat = bounds.getSouth();
+    var maxLng = bounds.getEast();
+    var maxLat = bounds.getNorth();
 
-    if (!layersData || layersData.length === 0) return;
+    var categoryId = document.getElementById('filterCategory')?.value ?? '';
+    var singleLayerId = window.activeSearchLayerId || '';
+    
+    // Tampilkan indikator loading jika diperlukan
+    var url = `/api/map/features?min_lng=${minLng}&min_lat=${minLat}&max_lng=${maxLng}&max_lat=${maxLat}&category_id=${categoryId}&single_layer_id=${singleLayerId}`;
 
-    layersData.forEach(function(item) {
-        if (!item.file_path && !item.url) return;
+    var currentFetchId = Date.now();
+    window.lastFetchId = currentFetchId;
 
-        var fileUrl;
-        if (item.url) {
-            fileUrl = item.url;
-        } else {
-            var cleanPath = item.file_path.replace('public/', '');
-            fileUrl = cleanPath.startsWith('storage/') ? "/" + cleanPath : "/storage/" + cleanPath;
-        }
+    fetch(url)
+        .then(res => {
+            if (!res.ok) throw new Error("Gagal memuat API PostGIS");
+            return res.json();
+        })
+        .then(data => {
+            if (window.lastFetchId !== currentFetchId) return; // Abaikan fetch yang overlap/usang
+            if (window.isPopupActive) return; // MENCEGAH BUG ASYNC: Jangan reset layer jika user berhasil buka popup sebelum fetch selesai!
 
-        fetch(fileUrl)
-            .then(res => {
-                if (!res.ok) throw new Error("File GeoJSON tidak ditemukan");
-                return res.json();
-            })
-            .then(data => {
+            window.allGeoLayers.clearLayers();
+            var metadataDict = data.postgis_features?.metadata_dict || {};
+
+            // Helper function for Popup Builder
+            function buildPopupHTML(meta, props) {
+                let valTitle      = meta.judul || meta.title || "Data Spasial";
+                let valIdentifier = meta.identifier || meta.identifier_peta || '-';
+                let valAbstrak    = meta.abstract || meta.abstrak || meta.abstrak_deskripsi_peta || 'Tidak ada deskripsi tersedia.';
+                let valInstansi   = meta.organization || meta.organisasi || meta.instansi || '-';
+                let valTipeData   = meta.data_type || meta.tipe_data || '-';
+                let valTahun      = meta.year || meta.tahun || '-';
+                let valPublikasi  = meta.publication_date || meta.waktu_publikasi || '-';
+                let valSumber     = meta.source || meta.sumber_data || '-';
+                let valCRS        = meta.crs || meta.sistem_koordinat || '-';
+                let valSkala      = meta.scale || meta.skala || '-';
                 
-                // Auto-Fix Geometry
-                let validFeatures = [];
-                function fixGeometry(geom) {
-                    if (!geom || !geom.coordinates) return null;
-                    if (!geom.type) {
-                        let c = geom.coordinates;
-                        if (Array.isArray(c[0]) && Array.isArray(c[0][0]) && Array.isArray(c[0][0][0])) geom.type = "MultiPolygon";
-                        else if (Array.isArray(c[0]) && Array.isArray(c[0][0])) geom.type = "Polygon";
-                        else if (Array.isArray(c[0])) geom.type = "LineString";
-                        else geom.type = "Point";
+                var regionName = props.NAMOBJ || props.Name || props.name || "Area Spasial";
+
+                let attrRows = '';
+                for (const [key, value] of Object.entries(props)) {
+                    if (key !== '_geospatial_id' && key !== 'NAMOBJ' && key !== 'Name' && key !== 'name' && value) {
+                        // Hilangkan properti internal dan kosong
+                        attrRows += `<tr><td class="metadata-label">${key}</td><td class="metadata-value">${value}</td></tr>`;
                     }
-                    return geom;
                 }
+                
+                let attrSection = attrRows ? `
+                    <div class="metadata-section-title">Atribut Spasial Fitur</div>
+                    <table class="metadata-table">${attrRows}</table>
+                ` : '';
 
-                if (data.type === "FeatureCollection" && data.features) {
-                    data.features.forEach(f => {
-                        f.geometry = fixGeometry(f.geometry);
-                        if(f.geometry) validFeatures.push(f);
-                    });
-                } else if (data.type === "Feature") {
-                    data.geometry = fixGeometry(data.geometry);
-                    if(data.geometry) validFeatures.push(data);
-                }
+                return `
+                    <div class="w-full">
+                        <div class="metadata-header">
+                            <div style="font-size: 10px; opacity: 0.9; font-weight: bold; text-transform: uppercase;">Geoportal Metadata</div>
+                            <div style="font-size: 16px; font-weight: 800; line-height: 1.2; margin-top: 2px;">${valTitle}</div>
+                            <div style="font-size: 11px; margin-top: 5px; opacity: 0.8;"><i class="fas fa-map-marker-alt mr-1"></i> Atribut Utama: ${regionName}</div>
+                        </div>
+                        <div class="metadata-body custom-scroll">
+                            <div class="metadata-section-title">Abstrak / Deskripsi</div>
+                            <div class="abstrak-box">${valAbstrak}</div>
+                            
+                            ${attrSection}
+                            
+                            <div class="metadata-section-title">Informasi Umum</div>
+                            <table class="metadata-table">
+                                <tr><td class="metadata-label">Identifier</td><td class="metadata-value">${valIdentifier}</td></tr>
+                                <tr><td class="metadata-label">Instansi</td><td class="metadata-value">${valInstansi}</td></tr>
+                                <tr><td class="metadata-label">Tipe Data</td><td class="metadata-value">${valTipeData}</td></tr>
+                                <tr><td class="metadata-label">Tahun</td><td class="metadata-value">${valTahun}</td></tr>
+                                <tr><td class="metadata-label">Publikasi</td><td class="metadata-value">${valPublikasi}</td></tr>
+                            </table>
+                            <div class="metadata-section-title">Detail Teknis</div>
+                            <table class="metadata-table">
+                                <tr><td class="metadata-label">Sumber Data</td><td class="metadata-value">${valSumber}</td></tr>
+                                <tr><td class="metadata-label">CRS</td><td class="metadata-value">${valCRS}</td></tr>
+                                <tr><td class="metadata-label">Skala</td><td class="metadata-value">${valSkala}</td></tr>
+                            </table>
+                        </div>
+                    </div>`;
+            }
 
-                var geoLayer = L.geoJSON({type: "FeatureCollection", features: validFeatures}, {
+            // 1. RENDER POSTGIS LAYER (MVT/BBOX)
+            var pgData = data.postgis_features;
+            if (pgData && pgData.features && pgData.features.length > 0) {
+                var pgLayer = L.geoJSON(pgData, {
                     style: styleDefault,
                     onEachFeature: function(feature, layer) {
                         var props = feature.properties || {};
-                        
-                        // 1. Ambil data metadata dari database (hasil with('metadata') di Controller)
-                        var meta = item.metadata || {}; 
-                        
-                        // 2. LOGIKA MAPPING OTOMATIS (Mencari nama kolom Inggris vs Indonesia)
-                        let valTitle      = meta.judul || meta.title || item.layer_name || "Data Spasial";
-                        let valIdentifier = meta.identifier || meta.identifier_peta || '-';
-                        let valAbstrak    = meta.abstract || meta.abstrak || meta.abstrak_deskripsi_peta || 'Tidak ada deskripsi tersedia.';
-                        let valInstansi   = meta.organization || meta.organisasi || meta.instansi || '-';
-                        let valTipeData   = meta.data_type || meta.tipe_data || '-';
-                        let valTahun      = meta.year || meta.tahun || '-';
-                        let valPublikasi  = meta.publication_date || meta.waktu_publikasi || '-';
-                        let valSumber     = meta.source || meta.sumber_data || '-';
-                        let valCRS        = meta.crs || meta.sistem_koordinat || '-';
-                        let valSkala      = meta.scale || meta.skala || '-';
-                        let valProtokol   = meta.distribution_protocol || meta.protokol_distribusi || '-';
-                        let valUrlSvc     = meta.distribution_url || meta.url_distribusi || '-';
-                        let valLayerSvc   = meta.service_layer_name || meta.nama_layer_service || '-';
-
-                        var regionName = props.NAMOBJ || props.Name || props.name || "Area Terpilih";
-
-                        // ====================================================
-                        // 🚀 POPUP KONTEN (TEMA MERAH PUTIH)
-                        // ====================================================
-                        let popupHTML = `
-                            <div class="w-full">
-                                <div class="metadata-header">
-                                    <div style="font-size: 10px; opacity: 0.9; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Geoportal Metadata</div>
-                                    <div style="font-size: 16px; font-weight: 800; line-height: 1.2; margin-top: 2px;">${valTitle}</div>
-                                    <div style="font-size: 11px; margin-top: 5px; opacity: 0.8;"><i class="fas fa-map-marker-alt mr-1"></i> Area: ${regionName}</div>
-                                </div>
-                                
-                                <div class="metadata-body custom-scroll">
-                                    <div class="metadata-section-title">Abstrak / Deskripsi</div>
-                                    <div class="abstrak-box">${valAbstrak}</div>
-
-                                    <div class="metadata-section-title">Informasi Umum</div>
-                                    <table class="metadata-table">
-                                        <tr><td class="metadata-label">Identifier</td><td class="metadata-value">${valIdentifier}</td></tr>
-                                        <tr><td class="metadata-label">Instansi</td><td class="metadata-value">${valInstansi}</td></tr>
-                                        <tr><td class="metadata-label">Tipe Data</td><td class="metadata-value">${valTipeData}</td></tr>
-                                        <tr><td class="metadata-label">Tahun</td><td class="metadata-value">${valTahun}</td></tr>
-                                        <tr><td class="metadata-label">Publikasi</td><td class="metadata-value">${valPublikasi}</td></tr>
-                                    </table>
-
-                                    <div class="metadata-section-title">Detail Teknis</div>
-                                    <table class="metadata-table">
-                                        <tr><td class="metadata-label">Sumber Data</td><td class="metadata-value">${valSumber}</td></tr>
-                                        <tr><td class="metadata-label">CRS</td><td class="metadata-value">${valCRS}</td></tr>
-                                        <tr><td class="metadata-label">Skala</td><td class="metadata-value">${valSkala}</td></tr>
-                                    </table>
-
-                                    <div class="metadata-section-title">Distribusi & Service</div>
-                                    <table class="metadata-table">
-                                        <tr><td class="metadata-label">Protokol</td><td class="metadata-value">${valProtokol}</td></tr>
-                                        <tr><td class="metadata-label">Layer Svc</td><td class="metadata-value">${valLayerSvc}</td></tr>
-                                        <tr><td class="metadata-label">URL</td><td class="metadata-value" style="word-break: break-all; font-size: 10px;">${valUrlSvc}</td></tr>
-                                    </table>
-                                </div>
-                            </div>
-                        `;
-
-                        layer.bindPopup(popupHTML, {
-                            className: 'red-white-popup',
-                            minWidth: 320,
-                            maxWidth: 350
-                        });
-
-                        layer.on('mouseover', function(e) {
-                            if (e.target.setStyle) e.target.setStyle(styleHover());
-                            if (e.target.bringToFront) e.target.bringToFront();
-                        });
-
-                        layer.on('mouseout', function(e) {
-                            if (e.target.setStyle) e.target.setStyle(styleDefault());
-                        });
-
-                        layer.on('click', function(e) {
-                            if (e.target.getBounds) window.map.fitBounds(e.target.getBounds(), { padding: [50,50] });
+                        var geoId = props._geospatial_id;
+                        var meta = metadataDict[geoId] || {};
+                        layer.bindPopup(buildPopupHTML(meta, props), { className: 'red-white-popup', minWidth: 320, maxWidth: 350 });
+                        layer.on({
+                            mouseover: function(e) { if(e.target.setStyle) e.target.setStyle(styleHover()); if(e.target.bringToFront) e.target.bringToFront(); },
+                            mouseout:  function(e) { if(e.target.setStyle) e.target.setStyle(styleDefault()); }
                         });
                     }
                 });
-
-                window.allGeoLayers.addLayer(geoLayer);
-                if (window.allGeoLayers.getLayers().length > 0) {
-                    window.map.fitBounds(window.allGeoLayers.getBounds(), { padding: [60,60], maxZoom: 12 });
+                window.allGeoLayers.addLayer(pgLayer);
+                
+                if (singleLayerId !== '' && pgLayer.getBounds().isValid()) {
+                    window.map.fitBounds(pgLayer.getBounds(), { padding: [30, 30], maxZoom: 14 });
                 }
-            })
-            .catch(error => {
-                console.error("Error loading layer:", error);
+            }
+
+            // 2. RENDER STATIC FALLBACK LAYERS (Bagi data yg ga diconvert ke Postgis)
+            if (!window.loadedStaticLayersData) window.loadedStaticLayersData = {};
+            
+            var staticLayers = data.static_layers || [];
+            staticLayers.forEach(layerInfo => {
+                var meta = metadataDict[layerInfo.id] || {};
+                var lid = layerInfo.id;
+                
+                // Helper draw component
+                function drawToMap(gData) {
+                    var lObj = L.geoJSON(gData, {
+                        style: styleDefault,
+                        onEachFeature: function(f, l) {
+                            l.bindPopup(buildPopupHTML(meta, f.properties || {}), { className: 'red-white-popup', minWidth: 320, maxWidth: 350 });
+                            l.on({
+                                mouseover: function(e) { if(e.target.setStyle) e.target.setStyle(styleHover()); if(e.target.bringToFront) e.target.bringToFront(); },
+                                mouseout:  function(e) { if(e.target.setStyle) e.target.setStyle(styleDefault()); }
+                            });
+                        }
+                    });
+                    window.allGeoLayers.addLayer(lObj);
+                    if (singleLayerId !== '' && lObj.getBounds().isValid()) {
+                        window.map.fitBounds(lObj.getBounds(), { padding: [30, 30], maxZoom: 14 });
+                    }
+                }
+
+                // Gunakan cache layer yang udah sukses keparsing supaya gk render file 80MB lagi kalo cm ngegeser peta dikit!!
+                if (window.loadedStaticLayersData[lid]) {
+                    let cachedData = window.loadedStaticLayersData[lid];
+                    if (Array.isArray(cachedData)) cachedData.forEach(d => drawToMap(d));
+                    else drawToMap(cachedData);
+                    return;
+                }
+                
+                async function loadStatic() {
+                    try {
+                        let parsedData;
+                        if (layerInfo.type === 'zip') {
+                            try {
+                                parsedData = await shp(layerInfo.url);
+                            } catch (e) {
+                                console.warn("shp.js failed to load ZIP for layer", lid, e);
+                                return;
+                            }
+                        } else {
+                            const resJson = await fetch(layerInfo.url);
+                            parsedData = await resJson.json();
+                        }
+
+                        // Simpan ke Cache JS Global
+                        window.loadedStaticLayersData[lid] = parsedData;
+
+                        if (Array.isArray(parsedData)) parsedData.forEach(d => drawToMap(d));
+                        else drawToMap(parsedData);
+
+                    } catch(err) {
+                        console.error('Failed processing static layer', lid, err);
+                    }
+                }
+                
+                loadStatic();
             });
-    });
+        })
+        .catch(error => console.error("Error PostGIS BBOX:", error));
+};
+
+// Agar kompatibel dengan filter navbar geonav.blade.php
+window.loadMapData = function(layersData) {
+    // Pada arsitektur baru PostGIS, filter parameters diambil saat fetchDynamicLayers dari DOM (document.getElementById).
+    // Sehingga fungsi loadMapData ini cukup me-reload fitur di map.
+    window.fetchDynamicLayers();
+    
+    // Opsional: jika ingin fitBounds ke hasil filter
+    if (layersData && layersData.length > 0) {
+        // Untuk saat ini biarkan tidak fit bounds karena bisa pindah tiba-tiba, biarkan dinamis
+    }
 };
 
 // ==========================================
@@ -323,6 +421,12 @@ window.loadMapData = function(layersData) {
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
     
+    // Tangkap parameter 'layer_id' dari URL agar map langsung membuka layer tersebut
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('layer_id')) {
+        window.activeSearchLayerId = urlParams.get('layer_id');
+    }
+
     var map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-3.8, 102.3], 8);
     window.map = map;
 
@@ -345,7 +449,20 @@ document.addEventListener('DOMContentLoaded', function() {
     var info = L.control({ position: 'bottomright' });
     info.onAdd = function () {
         this._div = L.DomUtil.create('div', 'info-control');
-        this._div.innerHTML = `<div style="font-size:11px;margin-bottom:4px;">Gerakkan mouse</div><div><b>🕒</b> <span id="map-time">-</span><br><b>📍</b> <span id="map-coords">Lat: -, Lng: -</span></div>`;
+        this._div.innerHTML = `
+            <div class="info-control-title">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                Informasi Kursor Peta
+            </div>
+            <div class="info-control-row">
+                <div class="info-icon-wrapper"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+                <span class="info-value" id="map-time">-</span>
+            </div>
+            <div class="info-control-row">
+                <div class="info-icon-wrapper"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
+                <span class="info-value" id="map-coords">-</span>
+            </div>
+        `;
         return this._div;
     };
     info.addTo(map);
@@ -357,10 +474,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.allGeoLayers = L.featureGroup().addTo(map);
 
-    var initialLayers = @json($layers ?? []);
-    if (initialLayers.length > 0) {
-        window.loadMapData(initialLayers);
-    }
+    window.isPopupActive = false;
+    map.on('popupopen', function() { window.isPopupActive = true; });
+    map.on('popupclose', function() { 
+        window.isPopupActive = false; 
+        window.fetchDynamicLayers(); // Muat ulang posisi terakhir setelah popup ditutup
+    });
+
+    // Event Dinamis PostGIS: Ambil data BBOX hanya ketika pergeseran layer berhenti
+    // TIDAK dijalankan jika ada popup yang terbuka agar layer tidak ter-reset dan popup hilang
+    map.on('moveend', function() {
+        if (!window.isPopupActive) {
+            window.fetchDynamicLayers();
+        }
+    });
+
+    // Ambil data pertama kali setelah inisialisasi peta
+    // Kasih delay kecil agar load bounds sukses dulu secara internal Leaflet
+    setTimeout(() => {
+        window.fetchDynamicLayers();
+    }, 200);
 });
 </script>
 

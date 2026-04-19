@@ -663,7 +663,10 @@
             if (fixedGeom) validFeatures.push({ type: "Feature", properties: {}, geometry: fixedGeom });
         }
 
-        if (validFeatures.length === 0) throw new Error("Format koordinat file tidak valid");
+        if (validFeatures.length === 0) {
+            console.warn("GeoJSON empty features:", geoData);
+            throw new Error("Format koordinat tidak terbaca. Pastikan dataset memiliki geometri dan file SHP berada di struktur utama ZIP.");
+        }
 
         let safeGeoJSON = { type: "FeatureCollection", features: validFeatures };
 

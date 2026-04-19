@@ -62,20 +62,6 @@
     }
 </style>
 
-{{-- ==================== TOMBOL KEMBALI SILANG DARI MANAJEMEN ==================== --}}
-@if(request('from') == 'kelolametadata')
-<a href="{{ route('produsen.metadata.index') }}" 
-   class="fixed top-6 right-6 z-[9999] bg-[#8b0000] text-yellow-400 w-14 h-14 flex items-center justify-center rounded-full shadow-2xl hover:bg-[#6b0000] border-2 border-yellow-400 hover:scale-105 active:scale-95 transition-all"
-   title="Kembali ke Kelola Metadata">
-    <i class="fas fa-times text-2xl"></i>
-</a>
-@elseif(request('from') == 'adminreferensi')
-<a href="{{ route('admin.masterreferensi') }}" 
-   class="fixed top-6 right-6 z-[9999] bg-[#8b0000] text-yellow-400 w-14 h-14 flex items-center justify-center rounded-full shadow-2xl hover:bg-[#6b0000] border-2 border-yellow-400 hover:scale-105 active:scale-95 transition-all"
-   title="Kembali ke Master Referensi">
-    <i class="fas fa-times text-2xl"></i>
-</a>
-@endif
 
 {{-- ==================== HERO HEADER ==================== --}}
 <div class="bg-[#8b0000] pt-16 pb-8 px-4 relative overflow-hidden">
@@ -456,19 +442,21 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             let geoLayer;
             if (data.is_shapefile) {
-                const geojson = await shp(data.url);
-                geoLayer = L.geoJSON(geojson);
-            } else {
-                geoLayer = L.geoJSON(data, {
-                    onEachFeature: function(feature, layer) {
-                        const p = feature.properties || {};
-                        const name = p.NAMOBJ || p.Name || p.name || p.NAMA || '—';
-                        if (name !== '—') {
-                            layer.bindTooltip(name, { sticky: true, className: 'text-xs' });
-                        }
-                    }
-                });
+                let geojson = await shp(data.url);
+                if (Array.isArray(geojson)) geojson = geojson[0];
+                data = geojson; // Override data we render
             }
+            
+            geoLayer = L.geoJSON(data, {
+                onEachFeature: function(feature, layer) {
+                    const p = feature.properties || {};
+                    const name = p.NAMOBJ || p.Name || p.name || p.NAMA || '—';
+                    if (name !== '—') {
+                        layer.bindTooltip(name, { sticky: true, className: 'text-xs' });
+                    }
+                }
+            });
+
             geoLayer.setStyle({
                 color: '#8b0000', weight: 2,
                 fillOpacity: 0.2, fillColor: '#dc2626'

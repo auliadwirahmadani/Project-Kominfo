@@ -59,6 +59,9 @@ Route::get('/instansi/{id}', [GeospatialController::class, 'showInstansi'])->nam
 Route::get('/geospatial/{id}/geojson', [GeospatialController::class, 'getGeoJson'])
     ->name('geospatial.geojson.public');
 
+// Titik Akhir Baru untuk PostGIS Bounding Box API
+Route::get('/api/map/features', [MapController::class, 'getFeaturesInView'])->name('api.map.features');
+
 // Filter AJAX
 Route::get('/geospatial/filter', [GeospatialController::class, 'filterData'])
     ->name('geospatial.filter');

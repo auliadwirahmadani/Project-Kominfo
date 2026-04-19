@@ -36,7 +36,6 @@
     .carousel {
         position: relative;
         overflow: hidden;
-        border-radius: 0 0 var(--radius) var(--radius);
         box-shadow: var(--shadow-lg);
         margin-bottom: 2rem;
     }
@@ -54,19 +53,13 @@
         background-size: cover;
         background-position: center;
     }
-    .carousel-slide::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(135deg, rgba(239,68,68,0.85) 0%, rgba(220,38,38,0.7) 50%, transparent 100%);
-        z-index: 1;
-    }
+
     .carousel-content {
         position: relative;
         z-index: 2;
         color: white;
-        padding: 2rem;
-        max-width: 600px;
+        padding: 2rem 6rem; /* 6rem kiri-kanan agar luas dan bebas dari panah navigasi */
+        max-width: 750px;
         animation: fadeInUp 0.6s ease-out;
     }
     @keyframes fadeInUp {
@@ -127,8 +120,14 @@
         color: white;
         transform: translateY(-50%) scale(1.1);
     }
-    .carousel-nav.prev { left: 1rem; }
-    .carousel-nav.next { right: 1rem; }
+    .carousel-nav.prev { left: 1.5rem; }
+    .carousel-nav.next { right: 1.5rem; }
+    
+    /* Sembunyikan panah di layar kecil agar tidak sesak, fallback menggunakan indikator bullet */
+    @media (max-width: 768px) {
+        .carousel-nav { display: none; }
+        .carousel-content { padding: 2rem 1.5rem; }
+    }
     .carousel-indicators {
         position: absolute;
         bottom: 1.5rem;
@@ -157,28 +156,107 @@
     ========================= */
     .catalog-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        grid-template-columns: repeat(1, 1fr);
         gap: 1.5rem;
     }
+    @media (min-width: 640px) {
+        .catalog-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+        .catalog-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (min-width: 1280px) {
+        .catalog-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    /* === Base Card === */
     .catalog-card {
-        background: white;
         border-radius: var(--radius);
         overflow: hidden;
-        box-shadow: var(--shadow-sm);
-        border: 1px solid var(--primary-light); /* Red outline */
+        box-shadow: var(--shadow-md);
+        border: 2px solid transparent;
         transition: var(--transition);
         display: flex;
         flex-direction: column;
+        position: relative;
     }
-    .catalog-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.3); /* Red glow shadow */
-        border-color: var(--primary); /* Stronger red hover outline */
+    /* Stripe warna di atas setiap kartu */
+    .catalog-card::before {
+        content: '';
+        display: block;
+        height: 5px;
+        width: 100%;
+        flex-shrink: 0;
     }
+
+    /* === Variasi Warna Merah (1, 4, 7, ...) === */
+    .catalog-card:nth-child(3n+1) {
+        background: linear-gradient(160deg, #fff 55%, #fff5f5 100%);
+        border-color: #fca5a5;
+    }
+    .catalog-card:nth-child(3n+1)::before {
+        background: linear-gradient(90deg, #ef4444 0%, #f97316 100%);
+    }
+    .catalog-card:nth-child(3n+1):hover {
+        border-color: #ef4444;
+        box-shadow: 0 12px 30px -6px rgba(239, 68, 68, 0.30);
+    }
+    .catalog-card:nth-child(3n+1) .card-badge {
+        color: #dc2626;
+        border: 1.5px solid #fca5a5;
+        background: #fff5f5;
+    }
+    .catalog-card:nth-child(3n+1) .card-image {
+        background: linear-gradient(135deg, #fef2f2 0%, #fff 100%);
+    }
+
+    /* === Variasi Warna Biru (2, 5, 8, ...) === */
+    .catalog-card:nth-child(3n+2) {
+        background: linear-gradient(160deg, #fff 55%, #eff6ff 100%);
+        border-color: #93c5fd;
+    }
+    .catalog-card:nth-child(3n+2)::before {
+        background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+    }
+    .catalog-card:nth-child(3n+2):hover {
+        border-color: #3b82f6;
+        box-shadow: 0 12px 30px -6px rgba(59, 130, 246, 0.28);
+    }
+    .catalog-card:nth-child(3n+2) .card-badge {
+        color: #2563eb;
+        border: 1.5px solid #93c5fd;
+        background: #eff6ff;
+    }
+    .catalog-card:nth-child(3n+2) .card-image {
+        background: linear-gradient(135deg, #eff6ff 0%, #fff 100%);
+    }
+
+    /* === Variasi Warna Hijau (3, 6, 9, ...) === */
+    .catalog-card:nth-child(3n+3) {
+        background: linear-gradient(160deg, #fff 55%, #ecfdf5 100%);
+        border-color: #6ee7b7;
+    }
+    .catalog-card:nth-child(3n+3)::before {
+        background: linear-gradient(90deg, #10b981 0%, #0ea5e9 100%);
+    }
+    .catalog-card:nth-child(3n+3):hover {
+        border-color: #10b981;
+        box-shadow: 0 12px 30px -6px rgba(16, 185, 129, 0.28);
+    }
+    .catalog-card:nth-child(3n+3) .card-badge {
+        color: #059669;
+        border: 1.5px solid #6ee7b7;
+        background: #ecfdf5;
+    }
+    .catalog-card:nth-child(3n+3) .card-image {
+        background: linear-gradient(135deg, #ecfdf5 0%, #fff 100%);
+    }
+
+    .catalog-card:hover { transform: translateY(-6px); }
+
     .card-image {
         position: relative;
         height: 200px;
-        background-color: #f8fafc;
     }
     .card-badge {
         position: absolute;
@@ -186,7 +264,6 @@
         left: 1rem;
         padding: 0.375rem 0.875rem;
         background: white;
-        color: var(--primary);
         font-weight: 700;
         font-size: 0.75rem;
         border-radius: 50px;
@@ -217,10 +294,8 @@
        📊 STATISTICS
     ========================= */
     .stats-section {
-        background: linear-gradient(135deg, #fef2f2 0%, #fff 50%, #fef2f2 100%);
-        padding: 4rem 0;
-        margin-top: 3rem;
-        border-radius: var(--radius);
+        padding: 4rem 1rem;
+        background: white;
     }
     .stats-header { text-align: center; margin-bottom: 3rem; }
     .stats-title {
@@ -235,19 +310,42 @@
         max-width: 1000px;
         margin: 0 auto;
     }
-    @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (min-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(4, 1fr); }
+    }
     .stat-card {
-        background: white;
-        padding: 1.75rem 1.5rem;
-        border-radius: var(--radius);
         text-align: center;
+        padding: 1.5rem;
     }
     .stat-value {
-        font-size: clamp(2rem, 5vw, 2.5rem);
+        font-size: clamp(2rem, 5vw, 2.75rem);
         font-weight: 800;
         color: var(--primary);
+        line-height: 1;
+        margin-bottom: 0.5rem;
+        display: block;
     }
-    .stat-label { color: #4b5563; font-weight: 500; }
+    .stat-label {
+        color: #4b5563;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 1rem;
+        background: linear-gradient(135deg, var(--primary-light), #fff);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 1.5rem;
+    }
+    .stat-icon svg {
+        width: 28px;
+        height: 28px;
+    }
 
     /* =========================
        ✨ DECORATIVE BLOBS
@@ -267,30 +365,46 @@
     .blob-1 { animation: float1 18s infinite ease-in-out; }
     .blob-2 { animation: float2 22s infinite ease-in-out; }
     .blob-3 { animation: float1 25s infinite ease-in-out reverse; }
+
+    /* =========================
+       🎬 SCROLL ANIMATIONS
+    ========================= */
+    .animate-on-scroll {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .animate-on-scroll.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .animate-on-scroll { opacity: 1 !important; transform: none !important; }
+    }
 </style>
 
 <!-- =========================
    🎠 HERO CAROUSEL
 ========================= -->
-<div class="carousel container mx-auto px-4" style="max-width: 1600px;">
+<div class="carousel w-full">
     <div class="carousel-track" id="carouselTrack">
-        <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1422190441165-ec2956dc9ecc?auto=format&fit=crop&w=1600&q=80');">
+        <div class="carousel-slide" style="background-image: url('{{ asset('helmi mian.png') }}');">
             <div class="carousel-content">
                 <h1 class="carousel-title">Geoportal Provinsi Bengkulu</h1>
                 <p class="carousel-desc">Akses data geospasial terintegrasi untuk perencanaan pembangunan.</p>
-                <a href="#katalog" class="carousel-btn">Jelajahi Data →</a>
+                <a href="#katalog" class="carousel-btn">Jelajahi Data <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"/></svg></a>
             </div>
         </div>
-        <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=1600&q=80');">
+        <div class="carousel-slide" style="background-image: url('{{ asset('logo 2.png') }}');">
             <div class="carousel-content">
                 <h1 class="carousel-title">Data Geospasial Terintegrasi</h1>
                 <p class="carousel-desc">Ribuan layer data dari berbagai instansi.</p>
-                <a href="#katalog" class="carousel-btn">Lihat Katalog →</a>
+                <a href="#katalog" class="carousel-btn">Lihat Katalog <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"/></svg></a>
             </div>
         </div>
     </div>
-    <button class="carousel-nav prev" id="prevBtn">‹</button>
-    <button class="carousel-nav next" id="nextBtn">›</button>
+    <button class="carousel-nav prev" id="prevBtn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+    <button class="carousel-nav next" id="nextBtn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
     <div class="carousel-indicators" id="indicators">
         <button class="carousel-indicator active" data-slide="0"></button>
         <button class="carousel-indicator" data-slide="1"></button>
@@ -310,7 +424,8 @@
 
     {{-- ===== FILTER BAR ===== --}}
     <form action="{{ route('catalog') }}" method="GET" id="filterForm">
-    <div class="flex flex-wrap items-center gap-3 mb-6 p-3 bg-white rounded-2xl shadow-sm border border-gray-100 relative" style="overflow: visible; z-index: 9999;">
+    <div class="flex flex-wrap items-center gap-3 mb-6 p-3 bg-white rounded-2xl relative" style="overflow: visible; z-index: 9999; border: 2px solid #fca5a5; box-shadow: 0 4px 16px rgba(239,68,68,0.10);">
+
 
         {{-- Search Input (Vanilla JS) --}}
         <div class="flex-1 min-w-[200px] relative" id="catalogSearchWrapper">
@@ -345,7 +460,7 @@
                 </div>
                 <ul id="catalogSearchList" class="max-h-52 overflow-y-auto"></ul>
                 <div id="catalogSearchClearBox" class="p-2 border-t border-gray-100 bg-gray-50" style="{{ request('search') ? '' : 'display:none;' }}">
-                    <button type="button" onclick="catalogSearchClear()" class="w-full text-xs text-gray-500 hover:text-red-600 py-1 transition">✕ Hapus pilihan</button>
+                    <button type="button" onclick="catalogSearchClear()" class="w-full flex items-center justify-center gap-1 text-xs text-gray-500 hover:text-red-600 py-1.5 transition"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Hapus pilihan</button>
                 </div>
             </div>
         </div>
@@ -437,7 +552,7 @@
     <!-- ✅ Cards Grid -->
     <div class="catalog-grid relative z-0" id="catalogGrid">
         @forelse($datasets as $data)
-        <article class="catalog-card">
+        <article class="catalog-card animate-on-scroll">
             
             {{-- Map Preview --}}
             <div class="card-image">
@@ -466,19 +581,33 @@
                 </h3>
                 <p class="text-xs text-gray-400 font-mono mt-1">ID: {{ $data->geospatial_id }}</p>
 
-                <div class="grid grid-cols-2 gap-4 my-4">
-                    <div>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Instansi</p>
-                        <p class="text-sm font-medium text-gray-700 truncate" title="{{ $data->metadata->organization ?? 'Pemprov Bengkulu' }}">
-                            {{ $data->metadata->organization ?? 'Pemprov Bengkulu' }}
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tahun</p>
-                        <p class="text-sm font-medium text-gray-700">
-                            {{ $data->metadata->year ?? $data->created_at->format('Y') }}
-                        </p>
-                    </div>
+                {{-- ✅ Badge Kontributor & Tahun --}}
+                <div class="flex flex-wrap items-center gap-2 my-2">
+                    {{-- Badge Instansi / Kontributor --}}
+                    <span class="inline-flex items-center gap-1.5 pl-1.5 pr-3.5 py-1 rounded-full text-sm font-semibold"
+                          style="background:#fde8e8; color:#c0392b; border: 1px solid #fca5a5;">
+                        @if($data->user?->profile?->photo)
+                            <img src="{{ asset('storage/' . $data->user->profile->photo) }}" class="w-5 h-5 rounded-full object-cover shrink-0 bg-white border border-red-200" alt="Logo Instansi" onerror="this.outerHTML='<svg class=\'w-4 h-4 shrink-0 ml-1.5\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4\'/></svg>'">
+                        @else
+                            <svg class="w-4 h-4 shrink-0 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                        @endif
+                        <span class="truncate max-w-[150px]" title="{{ $data->metadata->organization ?? ($data->user->profile->instansi ?? ($data->user->name ?? 'Pemprov Bengkulu')) }}">
+                            {{ $data->metadata->organization ?? ($data->user->profile->instansi ?? ($data->user->name ?? 'Pemprov Bengkulu')) }}
+                        </span>
+                    </span>
+
+                    {{-- Badge Tahun --}}
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
+                          style="background:#fef3c7; color:#92400e; border: 1px solid #fcd34d;">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        {{ $data->metadata->year ?? $data->created_at->format('Y') }}
+                    </span>
                 </div>
 
                 {{-- ✅ Route Detail Dataset --}}
@@ -547,9 +676,21 @@
                         {{ $profile?->instansi ?? $p->name }}
                     </h4>
                     <p class="text-sm text-gray-500 mt-2 line-clamp-2">{{ $profile?->bio ?? 'Penyedia data geospasial.' }}</p>
-                    
+
+                    {{-- Badge Kontributor --}}
+                    <div class="flex flex-wrap justify-center gap-2 mt-3">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold"
+                              style="background:#fde8e8; color:#c0392b; border: 1px solid #fca5a5;">
+                            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            Kontributor
+                        </span>
+                    </div>
+
                     <div class="mt-4 inline-flex items-center text-red-500 font-semibold text-sm group-hover:text-red-700">
-                        Lihat Selengkapnya <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        Lihat Selengkapnya <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </div>
                 </a>
             @endforeach
@@ -574,32 +715,35 @@
         </div>
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="mx-auto w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 shadow-sm border border-red-100">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+                </div>
+                <div class="stat-value" data-target="{{ $totalPeta ?? 0 }}">0</div>
+                <div class="stat-label">Layer Data Aktif</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
                 </div>
                 <div class="stat-value" data-target="{{ $totalKategori ?? 0 }}">0</div>
                 <div class="stat-label">Kategori Data</div>
             </div>
+            
             <div class="stat-card">
-                <div class="mx-auto w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 shadow-sm border border-red-100">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
-                </div>
-                <div class="stat-value" data-target="{{ $totalPeta ?? 0 }}">0</div>
-                <div class="stat-label">Peta Aktif</div>
-            </div>
-            <div class="stat-card">
-                <div class="mx-auto w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 shadow-sm border border-red-100">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 </div>
                 <div class="stat-value" data-target="{{ $totalPengguna ?? 0 }}">0</div>
-                <div class="stat-label">Pengguna</div>
+                <div class="stat-label">Pengguna Terdaftar</div>
             </div>
+            
             <div class="stat-card">
-                <div class="mx-auto w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 shadow-sm border border-red-100">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
-                <div class="stat-value" data-target="{{ $totalInstansi ?? 0 }}">0</div>
-                <div class="stat-label">Instansi Mitra</div>
+                <div class="stat-value" data-target="{{ $totalMetadata ?? 0 }}">0</div>
+                <div class="stat-label">Metadata Tersedia</div>
             </div>
         </div>
     </div>
@@ -743,6 +887,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }, { threshold: 0.3 });
         observer.observe(statsSection);
     }
+
+    // =========================
+    // 🎬 SCROLL REVEAL ANIMATION (sama seperti Tentang Kami)
+    // =========================
+    const scrollEls = document.querySelectorAll('.animate-on-scroll');
+    const scrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const cards = Array.from(scrollEls);
+                const idx = cards.indexOf(entry.target);
+                const delay = (idx % 6) * 90; // stagger setiap 90ms, reset tiap 6 card
+                setTimeout(() => {
+                    entry.target.classList.add('visible');
+                }, delay);
+                scrollObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+    scrollEls.forEach(el => scrollObserver.observe(el));
 });
 </script>
 
