@@ -52,6 +52,9 @@ Route::get('/dataset', [GeospatialController::class, 'katalogDataset'])->name('d
 // ✅ 2. Detail Dataset (Halaman Detail Maroon-Kuning)
 Route::get('/dataset/{id}', [GeospatialController::class, 'showDetail'])->name('dataset.show');
 
+// ✅ 2b. Download Dataset Publik (tanpa login)
+Route::get('/dataset/{id}/download', [GeospatialController::class, 'download'])->name('dataset.download');
+
 // ✅ 3. Detail Instansi (Katalog Peta per OPD)
 Route::get('/instansi/{id}', [GeospatialController::class, 'showInstansi'])->name('instansi.show');
 

@@ -275,7 +275,7 @@
             {{-- Tombol Aksi --}}
             <div class="space-y-2">
                 @if($dataset->file_path)
-                <a href="{{ route('admin.geospatial.download', $dataset->geospatial_id) }}"
+                <a href="{{ route('dataset.download', $dataset->geospatial_id) }}"
                    class="flex items-center justify-center gap-2 w-full py-3 px-4 bg-[#8b0000] hover:bg-[#6b0000] text-yellow-400 font-bold rounded-xl text-sm shadow-md transition-colors">
                     <i class="fas fa-download"></i> Unduh Dataset
                 </a>
@@ -441,13 +441,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             const data = await res.json();
 
             let geoLayer;
+            let renderData = data;
             if (data.is_shapefile) {
                 let geojson = await shp(data.url);
                 if (Array.isArray(geojson)) geojson = geojson[0];
-                data = geojson; // Override data we render
+                renderData = geojson; // Gunakan variabel baru agar tidak error reassign const
             }
             
-            geoLayer = L.geoJSON(data, {
+            geoLayer = L.geoJSON(renderData, {
                 onEachFeature: function(feature, layer) {
                     const p = feature.properties || {};
                     const name = p.NAMOBJ || p.Name || p.name || p.NAMA || '—';

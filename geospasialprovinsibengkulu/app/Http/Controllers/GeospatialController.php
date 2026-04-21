@@ -153,10 +153,19 @@ class GeospatialController extends Controller
         }
     }
 
-    public function download($id): StreamedResponse
+    public function download($id)
     {
         $layer = GeospatialLayer::where('geospatial_id', $id)->firstOrFail();
-        return Storage::disk('public')->download($layer->file_path, $layer->file_original_name);
+
+        if (!$layer->file_path || !Storage::disk('public')->exists($layer->file_path)) {
+            abort(404, 'File tidak ditemukan di server.');
+        }
+
+        // Gunakan nama asli file jika ada, fallback ke basename path
+        $downloadName = $layer->file_original_name 
+            ?? basename($layer->file_path);
+
+        return Storage::disk('public')->download($layer->file_path, $downloadName);
     }
 
     public function serveFile($id)

@@ -145,7 +145,7 @@
 
     {{-- ===== KANAN: Hanya tombol ✕ Kembali ===== --}}
     <div class="flex items-center">
-        <a href="javascript:history.back()"
+        <button onclick="if(window.history.length <= 1 || document.referrer === '') { window.close(); } else { window.history.back(); }"
            class="dataset-close-btn"
            title="Kembali ke halaman sebelumnya"
            aria-label="Tutup dan kembali">
@@ -153,7 +153,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
             </svg>
             <span class="hidden sm:inline">Kembali</span>
-        </a>
+        </button>
     </div>
 
 </nav>
